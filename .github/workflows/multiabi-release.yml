@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: multiabi-release
@@ -50,18 +50,9 @@ jobs:
           gomobile bind -target=android -androidapi 28 -trimpath -ldflags='-s -w -buildid= -checklinkname=0' -o "$GITHUB_WORKSPACE/app/libs/libv2ray.aar" ./
       - name: Build the additional x86 Aether executable
         run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
+          rustup toolchain install 1.100.0 --profile minimal
+          rustup default 1.100.0
           bash scripts/build-aether.sh
-      - name: Save native inputs before Android packaging
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          python3 scripts/check-multiabi-apks.py --native-only
-          if ! gh release view v1.5.0-775 >/dev/null 2>&1; then
-            gh release create v1.5.0-775 --draft --target "$GITHUB_SHA" --title 'AndroNG 1.5.0 — Build 775 (all architectures)' --notes 'Build outputs pending validation and local release signing. Not published.'
-          fi
-          gh release upload v1.5.0-775 dist/AndroNG-native-inputs-775.zip dist/release-manifest-775.json --clobber
       - name: Create disposable debug signing key
         run: keytool -genkeypair -keystore debug.keystore -storetype JKS -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Android Debug' -storepass android -keypass android
       - name: Build all APKs
@@ -87,10 +78,11 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: multiabi-validation
-          path: build/native-probe
+          path: build/native-probe/*.txt
           if-no-files-found: ignore
-      - name: Stage private unsigned assets in a draft release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload v1.5.0-775 dist/* --clobber
+      - name: Save unsigned APKs as CI outputs only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unsigned-apks-775
+          path: dist/*-unsigned.apk
+          if-no-files-found: error

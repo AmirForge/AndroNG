@@ -30,7 +30,7 @@ The same space-inspired AndroNG experience, now with dedicated APKs for all four
 
 Choose **ARM64** for most modern phones, **ARM32** for armeabi-v7a devices, or the matching **x86 / x86_64** build for Intel devices and emulators. If you are unsure, choose **Universal**; it includes all architectures and is a larger download.
 
-The existing interface and features are retained. This release adds architecture coverage. Install the **.apk** file; native input ZIPs and source archives are for developers.
+The existing interface and features are retained. This release adds architecture coverage. Install the **.apk** file; source archives are for developers.
 
 ---
 
@@ -39,7 +39,7 @@ The existing interface and features are retained. This release adds architecture
 <details>
 <summary>Source &amp; validation / سورس و بررسی فایل‌ها</summary>
 
-Source tag: `v1.5.0-775`. Native input archive: `AndroNG-native-inputs-775.zip`.
+Source tag: `v1.5.0-775`. Native build instructions are in the source repository.
 The native source revisions are pinned in `.gitmodules` and `release-manifest.json`.
 Checksums are supplied in `SHA256SUMS`.
 

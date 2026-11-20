@@ -31,10 +31,10 @@ records. The build-774 native notes are in `docs/releases/774-native-sources.md`
 
 ## Build inputs and verification
 
-`AndroNG-native-inputs-775.zip` contains the matching AAR and three standalone
-native components for each architecture. `release-manifest.json` records every
-input's SHA-256, the archive checksum, compiler versions and build source commit.
-The release also supplies `SHA256SUMS` for the signed downloads.
+Native build inputs are built from the pinned sources. They are not distributed
+as a separate download. See `docs/BUILD.md` for the source build steps.
+`release-manifest.json` in the repository records native input and signed APK
+checksums; the release's `SHA256SUMS` lists only the five installable APKs.
 
 The cloud build and Android 9 emulator checks are recorded at:
 

@@ -103,11 +103,6 @@
       "sha256": "4a4372f29b926381fc7a436f87773cf40d0a157c51e0081456af058377ee9b87"
     }
   ],
-  "nativeInputArchive": {
-    "file": "AndroNG-native-inputs-775.zip",
-    "bytes": 93654903,
-    "sha256": "c7593a0af93baad9a944a8a3f2a306fa8666195f5291997937c7eb6b296ceb92"
-  },
   "build": {
     "sourceCommit": "463824394d49ebd8f70d7833996c8afdb293aa9f",
     "xrayApi": 28,

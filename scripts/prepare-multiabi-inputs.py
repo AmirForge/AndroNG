@@ -1,6 +1,5 @@
 """Fetch the pinned baseline and stage native inputs without signing material."""
 import hashlib
-import io
 import json
 from pathlib import Path
 import urllib.request
@@ -27,9 +26,6 @@ def main():
     upstream = fetch(
         f"{baseline['repository']}/releases/download/{baseline['tag']}/{baseline['referenceAsset']}",
         baseline["referenceSha256"], ROOT / "build/native-baseline.apk")
-    previous = fetch(
-        "https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-774/AndroNG-native-inputs-774.zip",
-        lock["nativeInputArchive"]["sha256"], ROOT / "build/native-baseline.zip")
     with zipfile.ZipFile(upstream) as archive:
         for abi in ABIS:
             names = ["libhev-socks5-tunnel.so", "libhevsockstun.so"]
@@ -39,13 +35,11 @@ def main():
                 target = ROOT / "app/libs" / abi / name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(archive.read(f"lib/{abi}/{name}"))
-    with zipfile.ZipFile(previous) as archive:
-        with zipfile.ZipFile(io.BytesIO(archive.read("app/libs/libv2ray.aar"))) as aar:
-            for entry in aar.namelist():
-                if entry.startswith("assets/") and entry.endswith(".dat"):
-                    target = ROOT / "native/AndroidLibXrayLite" / entry
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    target.write_bytes(aar.read(entry))
+        for entry in archive.namelist():
+            if entry.startswith("assets/") and entry.endswith(".dat"):
+                target = ROOT / "native/AndroidLibXrayLite" / entry
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(archive.read(entry))
     print("Pinned HEV/Aether baselines and original geo assets staged; Xray must be rebuilt for API 28.")
 
 

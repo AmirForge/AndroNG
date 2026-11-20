@@ -1,81 +1,90 @@
-# Building AndroNG
+# Building AndroNG from source
 
-Android proxy client derived from v2rayNG and PattNG, with Xray and Aether support.
-This is not an official release of v2rayNG or PattNG.
+The source contains the app's full features. Native sources are pinned as Git
+submodules, and all four ABIs plus Universal target Android API 28 or newer.
+Release signing keys and administrator credentials are not included.
 
-This source snapshot retains the features of **1.5.0, build 775**: space-themed
-interface and animations, Aether endpoint scanning and racing, refresh and enhanced
-setup actions, `andro://` sharing, OutRule, managed configurations and Pro features.
+## Requirements
 
-## Downloads
+- Git, Python 3.9+, JDK 25 and the checked-in Gradle wrapper.
+- Android SDK platform 36, Build Tools 36.1.0 and NDK 29.0.14206865.
+- Go 1.27.2 and Rust 1.100.0 for the pinned native sources.
+- Linux/macOS for the native build shell script, or the GitHub Actions workflow.
 
-Download the signed APK from this repository's **Releases** page. Build 775 supplies **ARM32, ARM64, x86, x86_64 and Universal** APKs. Every
-package requires **Android 9 / API 28 or newer** and has version name 1.5.0.
+Build 775 was assembled in CI with Temurin JDK 25.0.5 and signed locally with
+JDK 25.0.2. Compiler versions and source revisions are recorded in
+[the source manifest](../release-manifest.json) and
+[native source notes](native-sources.md).
 
-APK and native input checksums are in [release-manifest.json](../release-manifest.json).
-A rebuild signed with another key cannot replace the maintainer-signed installation
-without uninstalling it first.
+## Build native inputs
 
-## Build
+Clone with `git clone --recurse-submodules <repository-url>`. From its root,
+configure `ANDROID_HOME` and install the SDK packages:
 
-The Gradle project is at the repository root. Install JDK 17 or newer compatible
-with the checked-in Gradle and Android Gradle Plugin, Android SDK platform 36 and
-Build Tools 36, and Python 3.9 or newer. The published build used JDK 25.0.2 and
-Gradle 9.8.2. Dependency versions are in `gradle/libs.versions.toml`.
+```bash
+sdkmanager 'platforms;android-36' 'build-tools;36.1.0' 'ndk;29.0.14206865'
+export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
+export NDK_HOME="$ANDROID_NDK_HOME"
+python3 scripts/prepare-multiabi-inputs.py
+```
 
-1. Clone with `git clone --recurse-submodules <repository-url>`.
-2. Download `AndroNG-native-inputs-775.zip` from the matching release.
-3. Restore native inputs on Windows:
+The preparation script verifies the pinned upstream PattNG APK checksum, then
+extracts the unchanged HEV/Aether components and geo assets from that baseline.
+It does not depend on a separately distributed AndroNG native archive.
 
-   ```powershell
-   python scripts/restore-native-inputs.py "C:/Downloads/AndroNG-native-inputs-775.zip"
-   ```
+Build the Xray binding for all four Android architectures:
 
-4. Set `ANDROID_HOME` to your SDK, or create an ignored `local.properties` with its location.
-5. Build **unsigned** release APKs for all four architectures and Universal:
+```bash
+export PATH="$(go env GOPATH)/bin:$PATH"
+cd native/AndroidLibXrayLite
+go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20261011034528-197770444867
+go install golang.org/x/mobile/cmd/gobind@v0.0.0-20261011034528-197770444867
+gomobile init
+gomobile bind -target=android -androidapi 28 -trimpath -ldflags='-s -w -buildid= -checklinkname=0' -o ../../app/libs/libv2ray.aar ./
+cd ../..
+```
 
-   ```powershell
-   .\gradlew.bat :app:assembleRelease
-   ```
+Build the additional x86 Aether executable:
 
-Outputs are under `app/build/outputs/apk/release/`. To limit architectures, pass
-`-PreleaseAbis=arm64-v8a` (or another comma-separated subset).
+```bash
+rustup toolchain install 1.100.0 --profile minimal
+RUSTUP_TOOLCHAIN=1.100.0 bash scripts/build-aether.sh
+```
 
-On Linux/macOS use `bash gradlew :app:assembleRelease`. For debug builds, create
-your own local `debug.keystore` at the repository root with conventional debug
-alias `androiddebugkey` and password `android`, then run `:app:assembleDebug`.
-This debug key is not the release key.
+## Build APKs
 
-If a primary Maven endpoint is unavailable, retry with
+```bash
+bash gradlew --no-daemon :app:assembleRelease
+```
+
+Windows can assemble the Android project with `gradlew.bat` after native inputs
+have been built and placed under `app/libs/`. APK outputs are in
+`app/build/outputs/apk/release/`. To limit architectures, pass
+`-PreleaseAbis=arm64-v8a` or another comma-separated subset.
+
+If a primary Maven endpoint is unavailable, add
 `-I scripts/repository-fallbacks.gradle`.
 
-Release signing keys and passwords are not included. Sign your own build locally
-with your own key. See [native source provenance](native-sources.md) for pinned
-source revisions and native rebuild information.
+For debug builds create your own local `debug.keystore`, alias `androiddebugkey`,
+password `android`, then run `:app:assembleDebug`. This disposable debug key is
+not the release signing key. Release outputs are unsigned until you sign them
+locally with your own key.
 
-The `src/test` loopback certificate is a public, test-only fixture with password
-`test-only`. It is not a release signing key and is not packaged in the APK.
+The manual **Prepare multi-ABI release** workflow also builds from source and
+saves unsigned APKs as CI artifacts. It does not publish technical archives or
+metadata files to Releases.
 
 ## Connected service
 
-The public Worker origin is a client endpoint, not an administrator credential.
-To use another service pass `-PcontrolPanelUrl=https://your-worker.example` at build
-time. Pass `-PcontrolPanelUrl=` to disable the configured service.
+The public Worker origin is a client endpoint, not an admin credential.
+Override it with `-PcontrolPanelUrl=https://your-worker.example` or disable it
+with `-PcontrolPanelUrl=`. Managed configuration features require a compatible
+backend; private subscriptions and administrator access are not included.
 
-The service provides managed configurations, activation codes, banner content,
-update notices and first-connect installation registration. Registration uses a
-generated local UUID rather than a hardware device identifier. Managed service
-features require a compatible backend; access to the maintainer's admin panel or
-private subscriptions is not included in this source release.
+The public `src/test` loopback certificate has password `test-only`; it is not
+used for release signing and is not packaged in the app.
 
-The `andro://` envelope is a sharing format, not a way to keep a profile secret
-from its recipient. Its implementation is included with the rest of the app.
+## License
 
-## License and acknowledgements
-
-Application source is distributed under [GPL-3.0](../LICENSE), subject to component
-licenses. Preserve upstream notices and dependency licenses. The APK includes an
-open-source notices page.
-
-Thanks to **2dust, patterniha and CluvexStudio**, and the maintainers of Xray,
-Aether, HEV, AndroidX, Kotlin and the other dependencies used by this project.
+Application source follows [GPL-3.0](../LICENSE), subject to component-specific
+licenses. Preserve upstream notices and dependency licenses.

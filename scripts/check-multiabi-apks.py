@@ -6,7 +6,6 @@ from pathlib import Path
 import shutil
 import struct
 import subprocess
-import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,10 +16,8 @@ def main():
     dist = ROOT / "dist"
     dist.mkdir(exist_ok=True)
     aapt = Path(os.environ["ANDROID_HOME"]) / "build-tools/36.1.0/aapt"
-    native_only = "--native-only" in sys.argv
-    apks = [] if native_only else list((ROOT / "app/build/outputs/apk/release").glob("*.apk"))
-    if not native_only:
-        assert len(apks) == 5, [p.name for p in apks]
+    apks = list((ROOT / "app/build/outputs/apk/release").glob("*.apk"))
+    assert len(apks) == 5, [p.name for p in apks]
     results = []
     for apk in apks:
         abi = next((name for name in ABIS if f"-{name}-" in apk.name), "universal")
@@ -49,25 +46,23 @@ def main():
         for abi, machine in ABIS.items():
             data = aar.read(f"jni/{abi}/libgojni.so")
             assert struct.unpack_from('<H', data, 18)[0] == machine
-    bundle = dist / "AndroNG-native-inputs-775.zip"
-    with zipfile.ZipFile(bundle, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
-        for path in files:
-            data = path.read_bytes()
-            relative = path.relative_to(ROOT).as_posix()
-            archive.writestr(relative, data)
-            metadata.append({"path": relative, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()})
+    for path in files:
+        data = path.read_bytes()
+        relative = path.relative_to(ROOT).as_posix()
+        metadata.append({"path": relative, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()})
     manifest = json.loads((ROOT / "docs/releases/774-manifest.json").read_text())
     manifest["release"] = {"versionName": "1.5.0", "versionCode": 775, "minSdk": 28,
                            "abis": list(ABIS), "apkFile": "AndroNG-1.5.0-775-universal-release.apk"}
     manifest["nativeFiles"] = metadata
-    manifest["nativeInputArchive"] = {"file": bundle.name, "bytes": bundle.stat().st_size,
-                                       "sha256": hashlib.sha256(bundle.read_bytes()).hexdigest()}
+    manifest.pop("nativeInputArchive", None)
     manifest["build"] = {"sourceCommit": os.environ.get("GITHUB_SHA"), "xrayApi": 28,
                          "xrayAbisRebuilt": list(ABIS), "aetherAdditionalAbisBuilt": ["x86"],
                          "goVersion": subprocess.check_output(["go", "version"], text=True).strip(),
                          "rustVersion": subprocess.check_output(["rustc", "--version"], text=True).strip()}
     manifest["apkOutputs"] = results
-    (dist / "release-manifest-775.json").write_text(json.dumps(manifest, indent=2) + '\n')
+    reports = ROOT / "build/reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    (reports / "multiabi-validation.json").write_text(json.dumps(manifest, indent=2) + '\n')
     print(json.dumps(results, indent=2))
 
 
