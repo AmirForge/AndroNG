@@ -17,11 +17,11 @@ jobs:
     env:
       GOMAXPROCS: '2'
       CARGO_BUILD_JOBS: '2'
-      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           submodules: recursive
+          persist-credentials: false
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
@@ -53,10 +53,19 @@ jobs:
           rustup toolchain install stable --profile minimal
           rustup default stable
           bash scripts/build-aether.sh
+      - name: Save native inputs before Android packaging
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/check-multiabi-apks.py --native-only
+          if ! gh release view v1.5.0-775 >/dev/null 2>&1; then
+            gh release create v1.5.0-775 --draft --target "$GITHUB_SHA" --title 'AndroNG 1.5.0 — Build 775 (all architectures)' --notes 'Build outputs pending validation and local release signing. Not published.'
+          fi
+          gh release upload v1.5.0-775 dist/AndroNG-native-inputs-775.zip dist/release-manifest-775.json --clobber
       - name: Create disposable debug signing key
         run: keytool -genkeypair -keystore debug.keystore -storetype JKS -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Android Debug' -storepass android -keypass android
       - name: Build all APKs
-        run: bash gradlew --no-daemon :app:assembleDebug :app:assembleRelease
+        run: bash gradlew --no-daemon -I scripts/repository-fallbacks.gradle :app:assembleDebug :app:assembleRelease
       - name: Verify package metadata and native architecture contents
         run: python3 scripts/check-multiabi-apks.py
       - name: Enable emulator acceleration
@@ -81,6 +90,7 @@ jobs:
           path: build/native-probe
           if-no-files-found: ignore
       - name: Stage private unsigned assets in a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v1.5.0-775 --draft --target "$GITHUB_SHA" --title 'AndroNG 1.5.0 — Build 775 (all architectures)' --notes 'Build outputs pending local release signing. Not published.'
-          gh release upload v1.5.0-775 dist/*
+          gh release upload v1.5.0-775 dist/* --clobber

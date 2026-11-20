@@ -1,0 +1,9 @@
+// Optional mirrors for runners where the primary Maven endpoints are unavailable.
+// This changes repository availability, not dependency coordinates or versions.
+settingsEvaluated { settings ->
+    settings.pluginManagement.repositories.maven { url = uri('https://maven.aliyun.com/repository/gradle-plugin') }
+    settings.pluginManagement.repositories.maven { url = uri('https://maven.aliyun.com/repository/google') }
+    settings.pluginManagement.repositories.maven { url = uri('https://maven.aliyun.com/repository/central') }
+    settings.dependencyResolutionManagement.repositories.maven { url = uri('https://maven.aliyun.com/repository/google') }
+    settings.dependencyResolutionManagement.repositories.maven { url = uri('https://maven.aliyun.com/repository/central') }
+}
