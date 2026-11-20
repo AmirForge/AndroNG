@@ -3,15 +3,14 @@
 Android proxy client derived from v2rayNG and PattNG, with Xray and Aether support.
 This is not an official release of v2rayNG or PattNG.
 
-This source snapshot retains the features of **1.5.0, build 774**: space-themed
+This source snapshot retains the features of **1.5.0, build 775**: space-themed
 interface and animations, Aether endpoint scanning and racing, refresh and enhanced
 setup actions, `andro://` sharing, OutRule, managed configurations and Pro features.
 
 ## Downloads
 
-Download the signed APK from this repository's **Releases** page. Build 774 is for
-**arm64-v8a**, requires **Android 9 / API 28 or newer**, and has version name 1.5.0.
-Other CPU architectures are not supported by this release.
+Download the signed APK from this repository's **Releases** page. Build 775 supplies **ARM32, ARM64, x86, x86_64 and Universal** APKs. Every
+package requires **Android 9 / API 28 or newer** and has version name 1.5.0.
 
 APK and native input checksums are in [release-manifest.json](../release-manifest.json).
 A rebuild signed with another key cannot replace the maintainer-signed installation
@@ -25,24 +24,30 @@ Build Tools 36, and Python 3.9 or newer. The published build used JDK 25.0.2 and
 Gradle 9.8.2. Dependency versions are in `gradle/libs.versions.toml`.
 
 1. Clone with `git clone --recurse-submodules <repository-url>`.
-2. Download `AndroNG-native-inputs-774.zip` from the matching release.
+2. Download `AndroNG-native-inputs-775.zip` from the matching release.
 3. Restore native inputs on Windows:
 
    ```powershell
-   python scripts/restore-native-inputs.py "C:/Downloads/AndroNG-native-inputs-774.zip"
+   python scripts/restore-native-inputs.py "C:/Downloads/AndroNG-native-inputs-775.zip"
    ```
 
 4. Set `ANDROID_HOME` to your SDK, or create an ignored `local.properties` with its location.
-5. Build an **unsigned** release:
+5. Build **unsigned** release APKs for all four architectures and Universal:
 
    ```powershell
    .\gradlew.bat :app:assembleRelease
    ```
 
+Outputs are under `app/build/outputs/apk/release/`. To limit architectures, pass
+`-PreleaseAbis=arm64-v8a` (or another comma-separated subset).
+
 On Linux/macOS use `bash gradlew :app:assembleRelease`. For debug builds, create
 your own local `debug.keystore` at the repository root with conventional debug
 alias `androiddebugkey` and password `android`, then run `:app:assembleDebug`.
 This debug key is not the release key.
+
+If a primary Maven endpoint is unavailable, retry with
+`-I scripts/repository-fallbacks.gradle`.
 
 Release signing keys and passwords are not included. Sign your own build locally
 with your own key. See [native source provenance](native-sources.md) for pinned

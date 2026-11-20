@@ -1,11 +1,16 @@
 {
   "release": {
     "versionName": "1.5.0",
-    "versionCode": 774,
-    "abi": "arm64-v8a",
+    "versionCode": 775,
     "minSdk": 28,
-    "apkFile": "AndroNG-1.5.0-774-arm64-v8a-release.apk",
-    "apkSha256": "c96d2ab2f2813caf8f8eddfc625fa491045cdb377b6409d2de68936a4cabade3"
+    "abis": [
+      "armeabi-v7a",
+      "arm64-v8a",
+      "x86",
+      "x86_64"
+    ],
+    "apkFile": "AndroNG-1.5.0-775-universal-release.apk",
+    "apkSha256": "2edfcb7f70817d588127d3f2cfed567beb59051db27da33eade5e9b940b6f9f6"
   },
   "nativeSources": [
     {
@@ -34,8 +39,23 @@
   "nativeFiles": [
     {
       "path": "app/libs/libv2ray.aar",
-      "bytes": 55142658,
-      "sha256": "0724bafae2224b1908560f81188b19955775967082c698e0793e6691f870f646"
+      "bytes": 58159123,
+      "sha256": "c5a843c17bf76de7b8122be98771310853c8e7dd460e97ebedaa9eb7781232cd"
+    },
+    {
+      "path": "app/libs/armeabi-v7a/libaether.so",
+      "bytes": 13088188,
+      "sha256": "9c44dfda3274cbca0d3c7860fb8f2684fece8b058cacac9549a516bd5d48823a"
+    },
+    {
+      "path": "app/libs/armeabi-v7a/libhev-socks5-tunnel.so",
+      "bytes": 244276,
+      "sha256": "71bcf502c51312296c4d5b7f1ac7bfebffc1f5efc2af740cc486b620ebeb4849"
+    },
+    {
+      "path": "app/libs/armeabi-v7a/libhevsockstun.so",
+      "bytes": 171748,
+      "sha256": "58a2fffbd1f0656a61fcb52e8f6ee94a1f8fccde5502484787148760507d1422"
     },
     {
       "path": "app/libs/arm64-v8a/libaether.so",
@@ -51,11 +71,118 @@
       "path": "app/libs/arm64-v8a/libhevsockstun.so",
       "bytes": 250296,
       "sha256": "37547aef8c07ecce819eb1af2831bb6ea50b4af1ed9bed95f20c936ff7c66201"
+    },
+    {
+      "path": "app/libs/x86/libaether.so",
+      "bytes": 20007468,
+      "sha256": "6a70ccce63e81a662dca0044b7e79b211bd4d7246bdc1901ff631c1549083f8b"
+    },
+    {
+      "path": "app/libs/x86/libhev-socks5-tunnel.so",
+      "bytes": 339188,
+      "sha256": "885ddc5a47c85e7c792d562f4c37b0ec880d5976fe510c16d692fd9018a88793"
+    },
+    {
+      "path": "app/libs/x86/libhevsockstun.so",
+      "bytes": 247012,
+      "sha256": "aac9e51b037b4bd7ecfb839b73087a4edbcfa4d91a71a782fdfd8ceed547a872"
+    },
+    {
+      "path": "app/libs/x86_64/libaether.so",
+      "bytes": 19969472,
+      "sha256": "5e103aac4937c81b2478b75125a2e53c8e08614f6a4d2cfd86435b01cb54cc60"
+    },
+    {
+      "path": "app/libs/x86_64/libhev-socks5-tunnel.so",
+      "bytes": 352480,
+      "sha256": "7811d61f9aee0bf7509640858ab03ee04ee2958dc306a56ff141c90b05549da5"
+    },
+    {
+      "path": "app/libs/x86_64/libhevsockstun.so",
+      "bytes": 249584,
+      "sha256": "4a4372f29b926381fc7a436f87773cf40d0a157c51e0081456af058377ee9b87"
     }
   ],
   "nativeInputArchive": {
-    "file": "AndroNG-native-inputs-774.zip",
-    "sha256": "5ed57da59a92573da6160450356d08fc4d316a42013b6176ca024d97915dd101",
-    "bytes": 63867258
-  }
+    "file": "AndroNG-native-inputs-775.zip",
+    "bytes": 93654903,
+    "sha256": "c7593a0af93baad9a944a8a3f2a306fa8666195f5291997937c7eb6b296ceb92"
+  },
+  "build": {
+    "sourceCommit": "463824394d49ebd8f70d7833996c8afdb293aa9f",
+    "xrayApi": 28,
+    "xrayAbisRebuilt": [
+      "armeabi-v7a",
+      "arm64-v8a",
+      "x86",
+      "x86_64"
+    ],
+    "aetherAdditionalAbisBuilt": [
+      "x86"
+    ],
+    "goVersion": "go version go1.27.2 linux/amd64",
+    "rustVersion": "rustc 1.100.0 (0ef1bc386 2026-11-09)"
+  },
+  "apkOutputs": [
+    {
+      "abi": "armeabi-v7a",
+      "file": "AndroNG-1.5.0-775-armeabi-v7a-release.apk",
+      "sha256": "1dd6d205ef88f4445747bffe640339b6443e83a1a5022fad15951b643657d8ac",
+      "bytes": 61509113
+    },
+    {
+      "abi": "arm64-v8a",
+      "file": "AndroNG-1.5.0-775-arm64-v8a-release.apk",
+      "sha256": "2056cf867bf1a8632598b1099ccde7160d98a05bd8c782518b33a80ed70f743d",
+      "bytes": 61574633
+    },
+    {
+      "abi": "x86",
+      "file": "AndroNG-1.5.0-775-x86-release.apk",
+      "sha256": "314610592f80f76bbea3153feb9bff07060f96ef3429e1a8b302e9d82f90b292",
+      "bytes": 64126393
+    },
+    {
+      "abi": "x86_64",
+      "file": "AndroNG-1.5.0-775-x86_64-release.apk",
+      "sha256": "56c6beb6ae8c7591302100ca08a175e106a722c64147586ee33cc59c9ea31e26",
+      "bytes": 63454673
+    },
+    {
+      "abi": "universal",
+      "file": "AndroNG-1.5.0-775-universal-release.apk",
+      "sha256": "2edfcb7f70817d588127d3f2cfed567beb59051db27da33eade5e9b940b6f9f6",
+      "bytes": 127083807
+    }
+  ],
+  "certificateSha256": "7e82bebcb7aa9fe40ab6195a1ac2019ce594fda6a6e0ba7ca263bd9e7992ad06",
+  "validation": {
+    "unsignedApksVerified": 5,
+    "versionCode": 775,
+    "minSdk": 28,
+    "architectures": [
+      "arm64-v8a",
+      "armeabi-v7a",
+      "x86",
+      "x86_64"
+    ],
+    "universal": true,
+    "signaturePending": false,
+    "ciRun": "https://github.com/AmirForge/AndroNG/actions/runs/44808827874",
+    "ciConclusion": "success",
+    "emulatorApi28": [
+      "x86 JNI load and local exit open/close",
+      "x86_64 JNI load and local exit open/close",
+      "Aether --help startup for x86 and x86_64",
+      "Universal debug APK install and cold launch"
+    ],
+    "notRun": [
+      "ARM/ARM64 physical-device checks for this new build",
+      "End-to-end VPN/proxy/root connectivity tests on each ABI"
+    ],
+    "signedApksVerified": 5,
+    "api28SignaturesVerified": true,
+    "zipAlignmentChecked16KiB": true
+  },
+  "signing": "Signed locally on Windows; private signing key never uploaded to GitHub Actions."
 }
