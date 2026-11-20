@@ -1,0 +1,82 @@
+name: Prepare multi-ABI release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: multiabi-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    env:
+      GOMAXPROCS: '2'
+      CARGO_BUILD_JOBS: '2'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.27.2'
+          cache: false
+      - name: Install Android tools
+        run: |
+          sdkmanager 'platforms;android-36' 'build-tools;36.1.0' 'ndk;29.0.14206865'
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
+      - name: Fetch pinned native baselines
+        run: python3 scripts/prepare-multiabi-inputs.py
+      - name: Rebuild Xray for Android 9 on all four architectures
+        working-directory: native/AndroidLibXrayLite
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20261011034528-197770444867
+          go install golang.org/x/mobile/cmd/gobind@v0.0.0-20261011034528-197770444867
+          gomobile init
+          gomobile bind -target=android -androidapi 28 -trimpath -ldflags='-s -w -buildid= -checklinkname=0' -o "$GITHUB_WORKSPACE/app/libs/libv2ray.aar" ./
+      - name: Build the additional x86 Aether executable
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          bash scripts/build-aether.sh
+      - name: Create disposable debug signing key
+        run: keytool -genkeypair -keystore debug.keystore -storetype JKS -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Android Debug' -storepass android -keypass android
+      - name: Build all APKs
+        run: bash gradlew --no-daemon :app:assembleDebug :app:assembleRelease
+      - name: Verify package metadata and native architecture contents
+        run: python3 scripts/check-multiabi-apks.py
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Android 9 native and startup smoke checks
+        uses: ReactiveCircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
+        with:
+          api-level: 28
+          arch: x86_64
+          target: default
+          disable-animations: true
+          emulator-options: -no-window -noaudio -no-boot-anim -gpu swiftshader_indirect -camera-back none
+          script: bash scripts/smoke-api28.sh
+      - name: Save validation logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: multiabi-validation
+          path: build/native-probe
+          if-no-files-found: ignore
+      - name: Stage private unsigned assets in a draft release
+        run: |
+          gh release create v1.5.0-775 --draft --target "$GITHUB_SHA" --title 'AndroNG 1.5.0 — Build 775 (all architectures)' --notes 'Build outputs pending local release signing. Not published.'
+          gh release upload v1.5.0-775 dist/*

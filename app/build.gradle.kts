@@ -16,6 +16,13 @@ if (controlPanelUrl.isNotEmpty()) {
     }
 }
 
+val availableAbis = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+val releaseAbis = providers.gradleProperty("releaseAbis")
+    .orElse(availableAbis.joinToString(",")).get().split(',').map(String::trim).distinct()
+require(releaseAbis.isNotEmpty() && releaseAbis.all { it in availableAbis }) {
+    "releaseAbis must contain supported Android CPU architectures"
+}
+
 android {
     namespace = "com.v2ray.ang"
     compileSdk = 36
@@ -24,13 +31,21 @@ android {
         applicationId = "com.v2meda.android"
         minSdk = 28
         targetSdk = 36
-        versionCode = 774
+        versionCode = 775
         versionName = "1.5.0"
-        ndk { abiFilters.add("arm64-v8a") }
 
         buildConfigField("String", "DISTRIBUTION", "\"v2meda\"")
         buildConfigField("String", "CONTROL_PANEL_URL", "\"$controlPanelUrl\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include(*releaseAbis.toTypedArray())
+            isUniversalApk = true
+        }
     }
 
     signingConfigs {
