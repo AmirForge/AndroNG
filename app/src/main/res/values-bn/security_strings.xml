@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_import_title">কনফিগারেশন আমদানি করবেন?</string>
+    <string name="external_import_message">শুধু বিশ্বস্ত উৎসের লিংক আমদানি করুন। প্রোফাইল প্রস্তুতির সময় বর্তমান VPN সংযোগ বন্ধ হতে পারে।</string>
+    <string name="external_import_accept">আমদানি</string>
+</resources>

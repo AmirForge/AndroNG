@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_smart_selection">Smart selection</string>
+    <string name="aether_smart_help_title">Ağıllı seçim haqqında</string>
+    <string name="aether_smart_help">Şəbəkə dəyişdikdə və ya bağlantı kəsildikdə saxlanmış siyahıdan işlək endpoint seçilir. Ən azı iki endpoint lazımdır.</string>
+    <string name="andromeda_galaxy_action">Qalaktikanı araşdır</string>
+    <string name="andromeda_art_description">Andromeda: biləklərində zəncir olan ulduzlardan ibarət qadın</string>
+    <string name="andromeda_close">Andromedanı bağla</string>
+</resources>

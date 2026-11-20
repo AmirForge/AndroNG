@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_test_profiles">تست کانفیگ‌ها</string>
+    <string name="aether_refresh_all_endpoints">رفرش همهٔ اندپوینت‌های Aether</string>
+    <string name="aether_refresh_none">کانفیگ Aether برای رفرش وجود ندارد</string>
+</resources>

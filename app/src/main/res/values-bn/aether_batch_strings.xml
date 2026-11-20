@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_test_profiles">কনফিগারেশন পরীক্ষা করুন</string>
+    <string name="aether_refresh_all_endpoints">সব Aether এন্ডপয়েন্ট রিফ্রেশ করুন</string>
+    <string name="aether_refresh_none">রিফ্রেশ করার জন্য Aether কনফিগারেশন নেই</string>
+</resources>

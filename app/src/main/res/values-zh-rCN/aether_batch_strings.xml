@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_test_profiles">测试配置</string>
+    <string name="aether_refresh_all_endpoints">刷新所有 Aether 端点</string>
+    <string name="aether_refresh_none">没有可刷新的 Aether 配置</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_test_profiles">Kiểm tra cấu hình</string>
+    <string name="aether_refresh_all_endpoints">Làm mới mọi điểm cuối Aether</string>
+    <string name="aether_refresh_none">Không có cấu hình Aether để làm mới</string>
+</resources>

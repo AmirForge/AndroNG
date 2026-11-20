@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pro_subscription">Активировать Pro</string>
+    <string name="pro_subscription_name">Andromeda Pro</string>
+    <string name="pro_badge">Pro</string>
+    <string name="pro_code_hint">Введите код активации для добавления профилей.</string>
+    <string name="pro_code_label">Код активации</string>
+    <string name="pro_invalid_code">Введите действительный код активации.</string>
+    <string name="pro_rate_limited">Слишком много попыток. Повторите через час.</string>
+    <string name="pro_unavailable">Не удалось получить подписку. Проверьте код и соединение.</string>
+    <string name="pro_cooldown">Повторите через %1$d мин.</string>
+    <string name="pro_activate">Активировать</string>
+    <string name="stop_preparation">Остановить текущую операцию</string>
+    <string name="pro_buy_code">buy pro code</string>
+</resources>

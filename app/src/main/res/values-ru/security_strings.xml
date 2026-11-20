@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_import_title">Импортировать конфигурацию?</string>
+    <string name="external_import_message">Импортируйте ссылки только из надёжных источников. Подготовка профилей может отключить текущее VPN-соединение.</string>
+    <string name="external_import_accept">Импортировать</string>
+</resources>

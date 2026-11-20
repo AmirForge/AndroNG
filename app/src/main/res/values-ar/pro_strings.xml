@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pro_subscription">تفعيل Pro</string>
+    <string name="pro_subscription_name">Andromeda Pro</string>
+    <string name="pro_badge">Pro</string>
+    <string name="pro_code_hint">أدخل رمز التفعيل لإضافة الإعدادات.</string>
+    <string name="pro_code_label">رمز التفعيل</string>
+    <string name="pro_invalid_code">أدخل رمز تفعيل صالحًا.</string>
+    <string name="pro_rate_limited">محاولات كثيرة. حاول مجدداً بعد ساعة.</string>
+    <string name="pro_unavailable">تعذر استلام الاشتراك. تحقق من الرمز والاتصال.</string>
+    <string name="pro_cooldown">حاول مجدداً بعد %1$d دقيقة.</string>
+    <string name="pro_activate">تفعيل</string>
+    <string name="stop_preparation">إيقاف العملية الحالية</string>
+    <string name="pro_buy_code">buy pro code</string>
+</resources>

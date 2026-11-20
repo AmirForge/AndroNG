@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_test_profiles">Konfiqurasiyaları yoxla</string>
+    <string name="aether_refresh_all_endpoints">Bütün Aether son nöqtələrini yenilə</string>
+    <string name="aether_refresh_none">Yeniləmək üçün Aether konfiqurasiyası yoxdur</string>
+</resources>

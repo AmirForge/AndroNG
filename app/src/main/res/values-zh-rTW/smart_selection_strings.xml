@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_smart_selection">Smart selection</string>
+    <string name="aether_smart_help_title">關於智慧選擇</string>
+    <string name="aether_smart_help">切換網路或連線中斷時，從已儲存清單選擇可用端點。至少需要儲存兩個端點。</string>
+    <string name="andromeda_galaxy_action">探索星系</string>
+    <string name="andromeda_art_description">仙女座：由星星組成、手腕帶著鎖鏈的女子</string>
+    <string name="andromeda_close">關閉仙女座</string>
+</resources>

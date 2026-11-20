@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_smart_selection">Smart selection</string>
+    <string name="aether_smart_help_title">دربارهٔ انتخاب هوشمند</string>
+    <string name="aether_smart_help">وقتی شبکه تغییر کند یا ارتباط قطع شود، یک endpoint سالم از فهرست ذخیره‌شده انتخاب می‌شود. حداقل دو endpoint لازم است.</string>
+    <string name="andromeda_galaxy_action">کاوش کهکشان</string>
+    <string name="andromeda_art_description">آندرومدا؛ زنی از ستاره‌ها با زنجیر بر مچ دست</string>
+    <string name="andromeda_close">بستن آندرومدا</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_smart_selection">Smart selection</string>
+    <string name="aether_smart_help_title">حول الاختيار الذكي</string>
+    <string name="aether_smart_help">عند تغيير الشبكة أو انقطاع الاتصال، يتم اختيار نقطة نهاية تعمل من القائمة المحفوظة. يلزم حفظ نقطتي نهاية على الأقل.</string>
+    <string name="andromeda_galaxy_action">استكشاف المجرة</string>
+    <string name="andromeda_art_description">أندروميدا، امرأة من النجوم مع سلاسل حول معصميها</string>
+    <string name="andromeda_close">إغلاق أندروميدا</string>
+</resources>

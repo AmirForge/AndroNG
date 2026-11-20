@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pro_subscription">激活 Pro</string>
+    <string name="pro_subscription_name">Andromeda Pro</string>
+    <string name="pro_badge">Pro</string>
+    <string name="pro_code_hint">输入激活码以添加配置。</string>
+    <string name="pro_code_label">激活码</string>
+    <string name="pro_invalid_code">请输入有效的激活码。</string>
+    <string name="pro_rate_limited">尝试次数过多，请一小时后重试。</string>
+    <string name="pro_unavailable">无法获取订阅，请检查代码和网络连接。</string>
+    <string name="pro_cooldown">请在 %1$d 分钟后重试。</string>
+    <string name="pro_activate">激活</string>
+    <string name="stop_preparation">停止当前操作</string>
+    <string name="pro_buy_code">buy pro code</string>
+</resources>

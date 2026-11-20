@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_smart_selection">Smart selection</string>
+    <string name="aether_smart_help_title">About Smart selection</string>
+    <string name="aether_smart_help">When the network changes or the connection fails, a working endpoint is selected from the saved list. At least two saved endpoints are needed.</string>
+    <string name="andromeda_galaxy_action">Explore galaxy</string>
+    <string name="andromeda_art_description">Andromeda, a woman formed from stars with chains at her wrists</string>
+    <string name="andromeda_close">Close Andromeda</string>
+</resources>

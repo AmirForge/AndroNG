@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_import_title">Konfiqurasiya idxal edilsin?</string>
+    <string name="external_import_message">Yalnız etibarlı mənbələrin linklərini idxal edin. Hazırlıq cari VPN bağlantısını dayandıra bilər.</string>
+    <string name="external_import_accept">İdxal et</string>
+</resources>

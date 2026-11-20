@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pro_subscription">Activate Pro</string>
+    <string name="pro_subscription_name">Andromeda Pro</string>
+    <string name="pro_badge">Pro</string>
+    <string name="pro_code_hint">Enter your active code to add your profiles.</string>
+    <string name="pro_code_label">Active code</string>
+    <string name="pro_invalid_code">Enter a valid active code.</string>
+    <string name="pro_rate_limited">Too many attempts. Try again in one hour.</string>
+    <string name="pro_unavailable">Could not receive this subscription. Check the code and try again.</string>
+    <string name="pro_cooldown">Try again in %1$d minutes.</string>
+    <string name="pro_activate">Activate</string>
+    <string name="stop_preparation">Stop the current operation</string>
+    <string name="pro_buy_code">buy pro code</string>
+</resources>

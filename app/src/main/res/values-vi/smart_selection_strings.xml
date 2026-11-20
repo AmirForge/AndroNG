@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_smart_selection">Smart selection</string>
+    <string name="aether_smart_help_title">Giới thiệu lựa chọn thông minh</string>
+    <string name="aether_smart_help">Khi đổi mạng hoặc mất kết nối, ứng dụng chọn endpoint hoạt động từ danh sách đã lưu. Cần ít nhất hai endpoint.</string>
+    <string name="andromeda_galaxy_action">Khám phá thiên hà</string>
+    <string name="andromeda_art_description">Andromeda: người phụ nữ bằng những vì sao với dây xích ở cổ tay</string>
+    <string name="andromeda_close">Đóng Andromeda</string>
+</resources>

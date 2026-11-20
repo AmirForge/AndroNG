@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_import_title">استيراد الإعدادات؟</string>
+    <string name="external_import_message">استورد الروابط من مصادر موثوقة فقط. قد يؤدي تجهيز هذه الإعدادات إلى قطع اتصال VPN الحالي.</string>
+    <string name="external_import_accept">استيراد</string>
+</resources>

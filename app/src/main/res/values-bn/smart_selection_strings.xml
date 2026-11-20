@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_smart_selection">Smart selection</string>
+    <string name="aether_smart_help_title">স্মার্ট নির্বাচন সম্পর্কে</string>
+    <string name="aether_smart_help">নেটওয়ার্ক বদলালে বা সংযোগ বিচ্ছিন্ন হলে সংরক্ষিত তালিকা থেকে সচল endpoint বেছে নেওয়া হয়। অন্তত দুটি endpoint প্রয়োজন।</string>
+    <string name="andromeda_galaxy_action">ছায়াপথ অন্বেষণ</string>
+    <string name="andromeda_art_description">অ্যান্ড্রোমিডা: কবজিতে শিকলসহ তারায় গঠিত নারী</string>
+    <string name="andromeda_close">অ্যান্ড্রোমিডা বন্ধ করুন</string>
+</resources>

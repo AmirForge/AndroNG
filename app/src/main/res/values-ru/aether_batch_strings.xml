@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_test_profiles">Проверить конфигурации</string>
+    <string name="aether_refresh_all_endpoints">Обновить все узлы Aether</string>
+    <string name="aether_refresh_none">Нет конфигураций Aether для обновления</string>
+</resources>

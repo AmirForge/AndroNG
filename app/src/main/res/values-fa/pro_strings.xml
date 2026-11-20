@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pro_subscription">فعال‌سازی Pro</string>
+    <string name="pro_subscription_name">Andromeda Pro</string>
+    <string name="pro_badge">Pro</string>
+    <string name="pro_code_hint">اکتیو کدت را وارد کن تا کانفیگ‌ها اضافه شوند.</string>
+    <string name="pro_code_label">اکتیو کد</string>
+    <string name="pro_invalid_code">یک اکتیو کد معتبر وارد کن.</string>
+    <string name="pro_rate_limited">تعداد تلاش‌ها بیش از حد است. یک ساعت دیگر تلاش کن.</string>
+    <string name="pro_unavailable">دریافت اشتراک انجام نشد. کد و اتصال اینترنت را بررسی کن.</string>
+    <string name="pro_cooldown">%1$d دقیقهٔ دیگر دوباره تلاش کن.</string>
+    <string name="pro_activate">فعال‌سازی</string>
+    <string name="stop_preparation">توقف عملیات جاری</string>
+    <string name="pro_buy_code">buy pro code</string>
+</resources>

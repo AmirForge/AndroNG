@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_import_title">导入配置？</string>
+    <string name="external_import_message">请只导入可信来源的链接。准备这些配置可能会断开当前 VPN 连接。</string>
+    <string name="external_import_accept">导入</string>
+</resources>

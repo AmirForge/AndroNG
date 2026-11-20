@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_test_profiles">اختبار الإعدادات</string>
+    <string name="aether_refresh_all_endpoints">تحديث جميع نقاط نهاية Aether</string>
+    <string name="aether_refresh_none">لا توجد إعدادات Aether للتحديث</string>
+</resources>

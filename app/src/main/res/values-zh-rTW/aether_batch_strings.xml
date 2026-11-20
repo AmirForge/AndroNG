@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_test_profiles">測試設定</string>
+    <string name="aether_refresh_all_endpoints">重新整理所有 Aether 端點</string>
+    <string name="aether_refresh_none">沒有可重新整理的 Aether 設定</string>
+</resources>

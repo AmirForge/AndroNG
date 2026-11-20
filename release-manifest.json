@@ -1,0 +1,61 @@
+{
+  "release": {
+    "versionName": "1.5.0",
+    "versionCode": 774,
+    "abi": "arm64-v8a",
+    "minSdk": 28,
+    "apkFile": "AndroNG-1.5.0-774-arm64-v8a-release.apk",
+    "apkSha256": "c96d2ab2f2813caf8f8eddfc625fa491045cdb377b6409d2de68936a4cabade3"
+  },
+  "nativeSources": [
+    {
+      "path": "native/AndroidLibXrayLite",
+      "url": "https://github.com/patterniha/AndroidLibXrayLite.git",
+      "commit": "1546ca75217fc6e2ca6ec6c532871fd8555b9f2f"
+    },
+    {
+      "path": "native/aether",
+      "url": "https://github.com/patterniha/Aether.git",
+      "commit": "d58f9d568083129ce2c767c85054021eb3ee6a38"
+    },
+    {
+      "path": "native/hev-socks5-tunnel",
+      "url": "https://github.com/heiher/hev-socks5-tunnel.git",
+      "commit": "75dbc1e9ace6c70d3d1b94df7c283efe1de7effc"
+    }
+  ],
+  "upstreamNativeBuild": {
+    "repository": "https://github.com/patterniha/PattNG",
+    "commit": "22927868a4f8aca2422db229148b24a6dd35d20e",
+    "tag": "2.4.0-P72",
+    "referenceAsset": "PattNG_2.4.0-P72_universal.apk",
+    "referenceSha256": "8b56591e3a4171597524cb1d8fa548859d86ccb27c44e791ae0fd2b1d777de15"
+  },
+  "nativeFiles": [
+    {
+      "path": "app/libs/libv2ray.aar",
+      "bytes": 55142658,
+      "sha256": "0724bafae2224b1908560f81188b19955775967082c698e0793e6691f870f646"
+    },
+    {
+      "path": "app/libs/arm64-v8a/libaether.so",
+      "bytes": 18056192,
+      "sha256": "7ee95f26cfd8a91e0adbc0b699f628e7d0757f66712cafb359b7387f70aff1f7"
+    },
+    {
+      "path": "app/libs/arm64-v8a/libhev-socks5-tunnel.so",
+      "bytes": 353616,
+      "sha256": "51ce7c110904803576ee78e6ae49737714b6e820c698c2e3e831fee587497f2e"
+    },
+    {
+      "path": "app/libs/arm64-v8a/libhevsockstun.so",
+      "bytes": 250296,
+      "sha256": "37547aef8c07ecce819eb1af2831bb6ea50b4af1ed9bed95f20c936ff7c66201"
+    }
+  ],
+  "nativeInputArchive": {
+    "file": "AndroNG-native-inputs-774.zip",
+    "sha256": "5ed57da59a92573da6160450356d08fc4d316a42013b6176ca024d97915dd101",
+    "bytes": 63867258
+  }
+}

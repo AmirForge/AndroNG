@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_import_title">匯入設定？</string>
+    <string name="external_import_message">請只匯入可信來源的連結。準備這些設定可能會中斷目前的 VPN 連線。</string>
+    <string name="external_import_accept">匯入</string>
+</resources>

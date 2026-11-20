@@ -1,0 +1,748 @@
+package com.v2ray.ang.ui.server
+
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.util.Log
+import androidx.activity.viewModels
+import androidx.annotation.ArrayRes
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.res.painterResource
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.v2ray.ang.R
+import com.v2ray.ang.core.AetherCore
+import com.v2ray.ang.core.AetherScanner
+import com.v2ray.ang.core.AetherExit
+import com.v2ray.ang.core.AetherScanResult
+import com.v2ray.ang.dto.entities.ProfileItem
+import com.v2ray.ang.enums.AetherProtocol
+import com.v2ray.ang.enums.AetherScanNetwork
+import com.v2ray.ang.enums.AetherTransport
+import com.v2ray.ang.enums.EConfigType
+import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastError
+import com.v2ray.ang.extension.toastSuccess
+import com.v2ray.ang.fmt.AetherFmt
+import com.v2ray.ang.ui.compose.CollapsiblePreferenceGroupHeader
+import com.v2ray.ang.ui.compose.FormDropdownField
+import com.v2ray.ang.ui.compose.FormTextField
+import com.v2ray.ang.ui.compose.SettingsSwitchItem
+import com.v2ray.ang.ui.compose.verticalScrollbar
+import com.v2ray.ang.util.Utils
+import kotlinx.coroutines.launch
+
+class ServerAetherActivity : BaseServerActivity() {
+
+    override val serverConfigType: EConfigType = EConfigType.AETHER
+
+    private val viewModel: ServerAetherViewModel by viewModels {
+        viewModelFactory {
+            initializer {
+                ServerAetherViewModel(application, AetherEditorRepository(application)) {
+                    AetherScanner.prepareNetwork(application)
+                }
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // A session can start or stop while this screen is away, e.g. from the notification.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.refreshSession()
+            }
+        }
+    }
+
+    @Composable
+    override fun EditorContent() {
+        val uiState = rememberSaveable(saver = ServerUiState.Saver) {
+            ServerUiState.from(initialConfig = initialConfig)
+        }.apply {
+            configType = serverConfigType
+        }
+        val isCoreAvailable by viewModel.isCoreAvailable.collectAsStateWithLifecycle()
+        val scanState by viewModel.scanState.collectAsStateWithLifecycle()
+        val scanEndpoints by viewModel.scanEndpoints.collectAsStateWithLifecycle()
+        val log by viewModel.log.collectAsStateWithLifecycle()
+        val listenPort by viewModel.listenPort.collectAsStateWithLifecycle()
+        val keysCheck by viewModel.keysCheck.collectAsStateWithLifecycle()
+        val exitNodes by viewModel.exitNodes.collectAsStateWithLifecycle()
+        // Folded away unless one of its settings holds a value, so a profile that set one shows it at once.
+        var showOther by rememberSaveable { mutableStateOf(uiState.hasOtherAetherSettings) }
+        val isScanning = scanState == AetherScanState.Scanning
+        val isBusy = isScanning
+        val protocol = AetherProtocol.fromString(uiState.aetherProtocol)
+        val usesHttp2 = protocol.overMasque &&
+            AetherTransport.fromString(uiState.aetherTransport) == AetherTransport.HTTP2
+
+        LaunchedEffect(protocol) {
+            viewModel.showIdentity(protocol)
+        }
+
+        LaunchedEffect(scanState) {
+            when (val state = scanState) {
+                is AetherScanState.Found -> {
+                    applyScanResult(uiState, state.result)
+                    toastSuccess(R.string.aether_scan_success)
+                    viewModel.onScanHandled()
+                }
+
+                AetherScanState.NotFound -> {
+                    toastError(R.string.aether_scan_failed)
+                    viewModel.onScanHandled()
+                }
+
+                AetherScanState.VpnConnected -> {
+                    toastError(R.string.aether_scan_disconnect_vpn)
+                    viewModel.onScanHandled()
+                }
+
+                AetherScanState.UnsupportedProfile -> {
+                    toastError(R.string.aether_unsupported_profile)
+                    viewModel.onScanHandled()
+                }
+
+                AetherScanState.Idle, AetherScanState.Scanning -> Unit
+            }
+        }
+
+        LaunchedEffect(keysCheck) {
+            when (val check = keysCheck) {
+                is AetherKeysCheck.SaveReady -> {
+                    viewModel.onKeysCheckHandled()
+                    saveChecked(uiState, check.profile, listenPort)
+                }
+
+                is AetherKeysCheck.Refused -> {
+                    viewModel.onKeysCheckHandled()
+                    toast(getString(check.message, *check.args.toTypedArray()))
+                }
+
+                is AetherKeysCheck.Missing, null -> Unit
+            }
+        }
+
+        ServerEditorScaffold(
+            title = serverConfigType.toString(),
+            onSaveClick = { requestSave(uiState, listenPort) }
+        ) {
+            // The WARP keys are shared by every Aether profile and got on a page of their own, with settings of its own.
+            // A scan holds the exit a run of that page dials out through, so the page opens once it has ended.
+            OutlinedButton(
+                onClick = { startActivity(Intent(this@ServerAetherActivity, ServerAetherKeysActivity::class.java)) },
+                enabled = !isScanning,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                Text(stringResource(R.string.aether_action_renew_key))
+            }
+            FormTextField(
+                stringResource(R.string.server_lab_remarks),
+                uiState.remarks,
+                { uiState.remarks = it }
+            )
+            AetherDropdownField(
+                label = R.string.aether_lab_protocol,
+                value = uiState.aetherProtocol,
+                entries = R.array.aether_protocol_entries,
+                values = R.array.aether_protocol_values,
+                enabled = !isBusy,
+                onValueChange = { uiState.aetherProtocol = it }
+            )
+            if (protocol.overMasque) {
+                AetherDropdownField(
+                    label = R.string.aether_lab_transport,
+                    value = uiState.aetherTransport,
+                    entries = R.array.aether_transport_entries,
+                    values = R.array.aether_transport_values,
+                    onValueChange = { uiState.aetherTransport = it }
+                )
+                // The server name the MASQUE handshakes put in their ClientHello, on either carrier and both hops;
+                // the HTTP host of the CONNECT request stays the core's.
+                FormTextField(
+                    stringResource(R.string.aether_lab_masque_sni),
+                    uiState.aetherMasqueSni,
+                    { uiState.aetherMasqueSni = it },
+                    keyboardType = KeyboardType.Uri
+                )
+            }
+            if (usesHttp2) {
+                SettingsSwitchItem(
+                    title = stringResource(R.string.aether_lab_fragment),
+                    checked = uiState.aetherFragment,
+                    onCheckedChange = { uiState.aetherFragment = it }
+                )
+                if (uiState.aetherFragment) {
+                    FormTextField(
+                        stringResource(R.string.aether_lab_fragment_size),
+                        uiState.aetherFragmentSize,
+                        { uiState.aetherFragmentSize = it },
+                        placeholder = stringResource(R.string.aether_hint_fragment_size)
+                    )
+                    FormTextField(
+                        stringResource(R.string.aether_lab_fragment_delay),
+                        uiState.aetherFragmentDelay,
+                        { uiState.aetherFragmentDelay = it },
+                        placeholder = stringResource(R.string.aether_hint_fragment_delay)
+                    )
+                }
+            }
+            if (protocol.overMasque) {
+                SettingsSwitchItem(
+                    title = stringResource(R.string.aether_lab_ech),
+                    summary = stringResource(R.string.aether_hint_ech),
+                    checked = uiState.aetherEch,
+                    onCheckedChange = { uiState.aetherEch = it }
+                )
+                // Where the key comes from: the HTTPS record of the ECH domain, asked of the ECH DNS.
+                // Lists to pick from, which take any other value the core does as well.
+                if (uiState.aetherEch) {
+                    FormDropdownField(
+                        label = stringResource(R.string.aether_lab_ech_dns),
+                        value = uiState.aetherEchDns,
+                        options = stringArrayResource(R.array.aether_ech_dns_options).toList(),
+                        onValueChange = { uiState.aetherEchDns = it },
+                        editable = true,
+                        keyboardType = KeyboardType.Uri
+                    )
+                    FormDropdownField(
+                        label = stringResource(R.string.aether_lab_ech_domain),
+                        value = uiState.aetherEchDomain,
+                        options = stringArrayResource(R.array.aether_ech_domain_options).toList(),
+                        onValueChange = { uiState.aetherEchDomain = it },
+                        editable = true,
+                        keyboardType = KeyboardType.Uri
+                    )
+                }
+            }
+            AetherDropdownField(
+                label = R.string.aether_lab_scan_mode,
+                value = uiState.aetherScanMode,
+                entries = R.array.aether_scan_entries,
+                values = R.array.aether_scan_values,
+                onValueChange = { uiState.aetherScanMode = it }
+            )
+            if (!usesHttp2) {
+                AetherDropdownField(
+                    label = R.string.aether_lab_obfuscation,
+                    value = uiState.aetherObfuscation,
+                    entries = R.array.aether_obfuscation_entries,
+                    values = R.array.aether_obfuscation_values,
+                    onValueChange = { uiState.aetherObfuscation = it }
+                )
+            }
+            // The ClientHello of the MASQUE handshakes: over HTTP/3, which carries TLS 1.3 alone, only its GREASE shows.
+            if (protocol.overMasque) {
+                AetherDropdownField(
+                    label = R.string.aether_lab_fingerprint,
+                    value = uiState.aetherFingerprint,
+                    entries = R.array.aether_fingerprint_entries,
+                    values = R.array.aether_fingerprint_values,
+                    onValueChange = { uiState.aetherFingerprint = it }
+                )
+            }
+            // The exit-node, where what the core sends leaves Xray: freedom, with the finalMask and the dialMode below set on
+            // it as an ordinary profile sets them on its outbound, or a profile's own outbound, which leaves those out of use.
+            ExitNodeField(
+                value = uiState.aetherExitNode,
+                nodes = exitNodes,
+                onValueChange = { uiState.aetherExitNode = it }
+            )
+            val freedom = uiState.aetherExitNode.isBlank()
+            FinalMaskField(
+                stringResource(R.string.aether_lab_exit_final_mask),
+                uiState.finalMask,
+                { uiState.finalMask = it },
+                enabled = freedom
+            )
+            DialModeField(
+                stringResource(R.string.aether_lab_exit_dial_mode),
+                uiState.dialMode,
+                { uiState.dialMode = it },
+                enabled = freedom
+            )
+            val importedOutrole = initialConfig.aetherEmbeddedOutrole
+            if (importedOutrole != null) {
+                Text(
+                    text = stringResource(R.string.aether_lab_outrole) + " · " + importedOutrole.remarks,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                OutroleField(
+                    value = uiState.aetherOutrole,
+                    nodes = exitNodes,
+                    onValueChange = { uiState.aetherOutrole = it },
+                    enabled = !isBusy
+                )
+            }
+            if (protocol.twoHops) {
+                FormTextField(
+                    stringResource(R.string.aether_lab_wiw_outer),
+                    uiState.aetherWiwOuter,
+                    { uiState.aetherWiwOuter = it },
+                    placeholder = stringResource(R.string.aether_hint_endpoint)
+                )
+                FormTextField(
+                    stringResource(R.string.aether_lab_wiw_inner),
+                    uiState.aetherWiwInner,
+                    { uiState.aetherWiwInner = it },
+                    // No scan looks for the WireGuard endpoint inside the MASQUE tunnel; blank, it is the one WARP assigns.
+                    placeholder = stringResource(
+                        if (protocol == AetherProtocol.WG_OVER_MASQUE) R.string.aether_hint_gool_peer else R.string.aether_hint_endpoint
+                    )
+                )
+            } else {
+                FormTextField(
+                    stringResource(R.string.server_lab_address),
+                    uiState.address,
+                    { uiState.address = it },
+                    placeholder = stringResource(R.string.aether_hint_endpoint)
+                )
+                FormTextField(
+                    stringResource(R.string.server_lab_port),
+                    uiState.port,
+                    { uiState.port = it },
+                    keyboardType = KeyboardType.Number
+                )
+            }
+            AetherDropdownField(
+                label = R.string.aether_lab_ip_version,
+                value = uiState.aetherIpVersion,
+                entries = R.array.aether_ip_entries,
+                values = R.array.aether_ip_values,
+                onValueChange = { uiState.aetherIpVersion = it }
+            )
+            CollapsiblePreferenceGroupHeader(
+                title = stringResource(R.string.aether_lab_other_settings),
+                expanded = showOther,
+                onExpandedChange = { showOther = it }
+            )
+            if (showOther) {
+                FormTextField(
+                    stringResource(R.string.aether_lab_dns),
+                    uiState.aetherDns,
+                    { uiState.aetherDns = it },
+                    placeholder = stringResource(R.string.aether_hint_dns)
+                )
+                FormTextField(
+                    stringResource(R.string.aether_lab_exit_loc),
+                    uiState.aetherExitLoc,
+                    { uiState.aetherExitLoc = it },
+                    placeholder = stringResource(R.string.aether_hint_exit_loc)
+                )
+                // v2meda: the tcpUserTimeout of the freedom exit-node, as its dialMode, only where the core connects out
+                // over TCP, as its settings or the command written in their place say.
+                if (uiState.aetherConnectsOverTcp) {
+                    FormTextField(
+                        stringResource(R.string.aether_lab_exit_tcp_user_timeout),
+                        uiState.tcpUserTimeout,
+                        { uiState.tcpUserTimeout = it },
+                        enabled = freedom,
+                        keyboardType = KeyboardType.Number,
+                        placeholder = stringResource(R.string.server_hint_tcp_user_timeout)
+                    )
+                }
+                CommonTargetStrategyField(uiState)
+            }
+            FormDropdownField(
+                label = stringResource(R.string.aether_endpoint_count),
+                value = uiState.aetherEndpointCount.toString(),
+                options = (1..50).map(Int::toString),
+                enabled = !isBusy,
+                onValueChange = { uiState.aetherEndpointCount = it.toIntOrNull()?.coerceIn(1, 50) ?: 1 },
+            )
+            var smartHelp by rememberSaveable { mutableStateOf(false) }
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    Modifier.weight(1f).toggleable(value = uiState.aetherSmartSelection, enabled = !isBusy,
+                        role = Role.Checkbox, onValueChange = { uiState.aetherSmartSelection = it }).padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(checked = uiState.aetherSmartSelection, onCheckedChange = null, enabled = !isBusy)
+                    Text(stringResource(R.string.aether_smart_selection), style = MaterialTheme.typography.bodyLarge)
+                }
+                IconButton(onClick = { smartHelp = true }) {
+                    Icon(painterResource(R.drawable.ic_help_outline_24dp), contentDescription = stringResource(R.string.aether_smart_help_title),
+                        modifier = Modifier.size(17.dp), tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+            if (smartHelp) AlertDialog(
+                onDismissRequest = { smartHelp = false },
+                title = { Text(stringResource(R.string.aether_smart_selection)) },
+                text = { Text(stringResource(R.string.aether_smart_help)) },
+                confirmButton = { TextButton(onClick = { smartHelp = false }) { Text(stringResource(android.R.string.ok)) } },
+            )
+            val scanNetworks = if (protocol.overMasque) AetherScanNetwork.entries else listOf(AetherScanNetwork.UDP)
+            val scanNetworkLabels = stringArrayResource(R.array.aether_scan_network_entries)
+            FormDropdownField(
+                label = stringResource(R.string.aether_scan_network),
+                value = scanNetworkLabels[(if (protocol.overMasque) AetherScanNetwork.fromString(uiState.aetherScanNetwork) else AetherScanNetwork.UDP).ordinal],
+                options = scanNetworks.map { scanNetworkLabels[it.ordinal] },
+                enabled = protocol.overMasque && !isBusy,
+                onValueChange = { picked ->
+                    uiState.aetherScanNetwork = scanNetworks.first { scanNetworkLabels[it.ordinal] == picked }.type
+                    uiState.aetherEndpoints = emptyList()
+                },
+            )
+            val endpoints = if (isScanning) scanEndpoints else uiState.aetherEndpoints
+            if (endpoints.isNotEmpty()) {
+                Text(
+                    stringResource(R.string.aether_endpoints_found, endpoints.size, uiState.aetherEndpointCount),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                endpoints.chunked(10).forEach { batch ->
+                    Text(
+                        text = batch.joinToString("\n"),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+            }
+            // After every setting it runs on, the DNS and the exit rule of Other settings included.
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { viewModel.scan(uiState.toProfileItem(initialConfig, listenPort)) },
+                    enabled = isCoreAvailable && !isBusy
+                ) {
+                    if (isScanning) {
+                        ProgressMark()
+                    }
+                    Text(stringResource(if (isScanning) R.string.aether_action_scanning else R.string.aether_action_scan))
+                }
+                if (isScanning) {
+                    TextButton(onClick = viewModel::cancelScan) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
+                }
+            }
+            if (!isCoreAvailable) {
+                Text(
+                    text = stringResource(R.string.aether_unsupported_abi),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+            // The command the core is started with, built from the settings above and open to a hand
+            // that needs an option the settings have no field for.
+            val builtCommand = AetherCore.of(uiState.toProfileItem(initialConfig, listenPort).copy(aetherCommand = null), listenPort).command
+            val customCommand = uiState.aetherCommand.isNotBlank() && uiState.aetherCommand.trim() != builtCommand
+            FormTextField(
+                stringResource(R.string.aether_lab_command),
+                uiState.aetherCommand.ifBlank { builtCommand },
+                { uiState.aetherCommand = it },
+                maxLines = 8,
+                supportingText = if (customCommand) stringResource(R.string.aether_command_custom) else null
+            )
+            if (customCommand) {
+                TextButton(
+                    onClick = { uiState.aetherCommand = "" },
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    Text(stringResource(R.string.aether_action_use_settings))
+                }
+            }
+            AetherLogPanel(entries = log)
+        }
+
+        // A key the profile, or its scan, needs is missing: get it first on the WARP keys page, or go on, and the core
+        // registers what it lacks on its own.
+        (keysCheck as? AetherKeysCheck.Missing)?.let { missing ->
+            AetherKeysMissingDialog(
+                anywayText = stringResource(if (missing.scan) R.string.aether_action_scan_anyway else R.string.aether_action_save_anyway),
+                onGetKeys = {
+                    viewModel.onKeysCheckHandled()
+                    startActivity(Intent(this@ServerAetherActivity, ServerAetherKeysActivity::class.java))
+                },
+                onAnyway = {
+                    viewModel.onKeysCheckHandled()
+                    if (missing.scan) scanChecked(uiState, missing.profile, listenPort) else saveChecked(uiState, missing.profile, listenPort)
+                },
+                onDismiss = viewModel::onKeysCheckHandled
+            )
+        }
+    }
+
+    /**
+     * Saves the profile once it passes the editor's checks and the WARP keys it needs are there: the screen saves on
+     * [AetherKeysCheck.SaveReady], and asks first when a key is missing. Once a save has closed the editor, a tap on
+     * Save it still takes does nothing.
+     */
+    private fun requestSave(state: ServerUiState, listenPort: Int) {
+        if (isFinishing) return
+        if (!validateBasicConfig(state)) return
+        // v2meda: the checks normalize the profile in place, so they get a copy: the outcome carries the profile as the
+        // screen holds it, for the screen to tell whether it holds that one still, see saveChecked.
+        val held = state.toProfileItem(initialConfig, listenPort)
+        val config = held.copy()
+        if (!validateCommonConfig(state, config)) return
+        if (!validateProtocolConfig(config)) return
+        viewModel.checkKeysBeforeSave(config, held)
+    }
+
+    /**
+     * Saves the profile after the check of its keys, unless a save has closed the editor already. v2meda: the check was
+     * made on [checked], the profile the screen held at the tap; one edited while the check ran is checked in its turn,
+     * rather than saved without its own check.
+     */
+    private fun saveChecked(state: ServerUiState, checked: ProfileItem, listenPort: Int) {
+        if (isFinishing) return
+        if (holdsChecked(state.toProfileItem(initialConfig, listenPort), checked, listenPort)) saveServer(state) else requestSave(state, listenPort)
+    }
+
+    /**
+     * Scans although a key [checked] needs is missing, as asked, unless the screen holds another profile by now, edited
+     * while the check ran: that one is checked in its turn.
+     */
+    private fun scanChecked(state: ServerUiState, checked: ProfileItem, listenPort: Int) {
+        val current = state.toProfileItem(initialConfig, listenPort)
+        viewModel.scan(current, anyway = holdsChecked(current, checked, listenPort))
+    }
+
+    /** v2meda: the Aether listen port the view model holds, read off the main thread, see [BaseServerActivity.saveServer]. */
+    override val aetherListenPort: Int
+        get() = viewModel.listenPort.value
+
+    override fun validateBasicConfig(state: ServerUiState): Boolean {
+        if (state.remarks.isBlank()) {
+            toast(R.string.server_lab_remarks)
+            return false
+        }
+        return true
+    }
+
+    // The finalMask of an Aether profile is that of its exit-node: a bad one is named by its own label and checked as
+    // on the WARP keys page, before the check every profile has would name it the outbound's. With a profile as the
+    // exit-node it is out of use, but a broken one is refused all the same: it would be kept for freedom, and a link
+    // of the profile, which carries no exit-node, would hand it on.
+    override fun validateCommonConfig(state: ServerUiState, config: ProfileItem): Boolean {
+        if (!AetherExit.takesFinalMask(config.finalMask)) {
+            toast(R.string.aether_lab_exit_final_mask)
+            return false
+        }
+        return super.validateCommonConfig(state, config)
+    }
+
+    // The profile chosen as the exit-node is looked up when the keys are checked, see ServerAetherViewModel.checkKeysBeforeSave.
+    override fun validateProtocolConfig(config: ProfileItem): Boolean {
+        // The core cannot listen where the local proxy of the app does, nor where the inbound it dials out
+        // through does; Xray would get the port first. v2meda: the ports are the view model's, read off the main thread.
+        val takenPorts = viewModel.takenPorts.value
+        val listenPort = viewModel.listenPort.value
+        val problem = AetherFmt.normalize(config, takenPorts, listenPort) ?: return true
+        // v2meda: those about the listeners of a command name the port or the option, see messageOfAetherProblem.
+        val message = messageOfAetherProblem(problem, config, takenPorts, listenPort)
+        toast(message.argument?.let { getString(message.id, it) } ?: getString(message.id))
+        return false
+    }
+
+    private fun applyScanResult(state: ServerUiState, result: AetherScanResult) {
+        result.transport?.let { state.aetherTransport = it.type }
+        state.aetherEndpoints = result.candidates.ifEmpty { listOf(AetherScanner.encode(result)) }
+        if (AetherProtocol.fromString(state.aetherProtocol).twoHops) {
+            state.aetherWiwOuter = result.endpoint.toString()
+            // WireGuard over MASQUE finds its gateway alone, and keeps the WireGuard endpoint it scanned with.
+            result.innerHop?.let { state.aetherWiwInner = it.toString() }
+        } else {
+            state.address = result.endpoint.host
+            state.port = result.endpoint.port.toString()
+        }
+    }
+}
+
+@Composable
+private fun AetherDropdownField(
+    @StringRes label: Int,
+    value: String,
+    @ArrayRes entries: Int,
+    @ArrayRes values: Int,
+    enabled: Boolean = true,
+    onValueChange: (String) -> Unit,
+) {
+    val labels = stringArrayResource(entries)
+    val options = stringArrayResource(values)
+    FormDropdownField(
+        label = stringResource(label),
+        value = labels.getOrElse(options.indexOf(value).coerceAtLeast(0)) { "" },
+        options = labels.toList(),
+        onValueChange = { picked ->
+            val index = labels.indexOf(picked)
+            if (index >= 0) onValueChange(options[index])
+        },
+        enabled = enabled
+    )
+}
+
+/**
+ * Says that a WARP key is missing and offers to get it first, on the WARP keys page, or to go on as [anywayText] says.
+ * Dismissed, it does neither.
+ */
+@Composable
+private fun AetherKeysMissingDialog(anywayText: String, onGetKeys: () -> Unit, onAnyway: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        text = {
+            Text(
+                text = stringResource(R.string.aether_keys_missing),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onAnyway) {
+                Text(anywayText)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onGetKeys) {
+                Text(stringResource(R.string.aether_action_renew_key))
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
+    )
+}
+
+@Composable
+internal fun ProgressMark() {
+    CircularProgressIndicator(
+        modifier = Modifier
+            .padding(end = 8.dp)
+            .size(18.dp),
+        strokeWidth = 2.dp
+    )
+}
+
+/** The log of an Aether page: [entries], newest last, or [emptyText] while there are none, with a button that copies them. */
+@Composable
+internal fun AetherLogPanel(entries: List<AetherLogEntry>, @StringRes emptyText: Int = R.string.aether_log_empty) {
+    val context = LocalContext.current
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(entries.lastOrNull()?.id) {
+        if (entries.isNotEmpty()) listState.scrollToItem(entries.lastIndex)
+    }
+
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.aether_log_title),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(
+                onClick = {
+                    Utils.setClipboard(context, entries.joinToString("\n") { it.text.resolve(context) })
+                    context.toastSuccess(R.string.toast_success)
+                },
+                enabled = entries.isNotEmpty()
+            ) {
+                Text(stringResource(R.string.logcat_copy))
+            }
+        }
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(280.dp)
+        ) {
+            if (entries.isEmpty()) {
+                Text(
+                    text = stringResource(emptyText),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(12.dp)
+                )
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScrollbar(listState),
+                    contentPadding = PaddingValues(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    items(items = entries, key = { it.id }) { entry ->
+                        Text(
+                            text = entry.text.asString(),
+                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                            color = logColor(entry)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AetherLogText.asString(): String = when (this) {
+    is AetherLogText.Raw -> value
+    is AetherLogText.Resource -> stringResource(id, *args.toTypedArray())
+}
+
+private fun AetherLogText.resolve(context: Context): String = when (this) {
+    is AetherLogText.Raw -> value
+    is AetherLogText.Resource -> context.getString(id, *args.toTypedArray())
+}
+
+@Composable
+private fun logColor(entry: AetherLogEntry): Color = when {
+    entry.priority >= Log.ERROR -> MaterialTheme.colorScheme.error
+    entry.priority == Log.WARN -> MaterialTheme.colorScheme.tertiary
+    entry.text is AetherLogText.Resource -> MaterialTheme.colorScheme.onSurface
+    else -> MaterialTheme.colorScheme.onSurfaceVariant
+}

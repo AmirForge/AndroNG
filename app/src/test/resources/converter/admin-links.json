@@ -1,0 +1,398 @@
+[
+  {
+    "link": "andro://Ad7_JufIWf0lSDvWngfg_VQxaiVCv3LXU8QICgsrDcTI7X0Islo8FJstxx_lQg80x_5aw8yG3asAG84iNRu9_OjK9bRrsmizVpYwaIe46zIOM5OCdQC9Jnv5SB7EzGKLhxlNykHlRDAg4XhKFouOTSq_dBWV_5yBaKr44NkX1zNCfDWqhDhpo9E2qNK-uVUuRjRsQdGm2oj18xmKKedsa3GDRaXxyem3Rtl7J1wP2NBuNEcEO9NaEOBR1hCs2j6yNZ6duOVqHTBaAh0KykZ5kcf6MItEYSsZbbe7ZUGVg2CNCpDdrpLboDB9BJFVDdiN5CVGtsiRwkla8QPP0Fxa9JyC7d_kSTn7ieEm1XnqRhcAKp5WLdJmWWTX-Ud5nZqB3jx0pdpo3IXGE1ene1lasqYl1-rpuce6g0bFnzVMyEDqXOMpwk05PGyKjESYGmE2G5i1GAtE03ESKMIqHYBmMhhopOSE3Kysq9mlX1srdsJiH9VfL338jLzn517K5OcNvtxF9Qf5yc7rnQ9UsFvULnopV8EeacRuVZ5XwLAau-8lzy-m7ye18DAn1Hcuo_tLZKpQuA87VEjkWuyzISsUatszquj58_LBK4BizWZkAiy9iPyJcbDk7h-RQX_N1euQI6B8rHea-K8RJibAYFpXThRWGnkTOqAT8zSku4XVa7GZRm_ecIsNTYCK8fvy6WvC_zrDaKdX5gtBE6nfWMR1cr7Bsh6X4zgVyF3BY-wmp-U0ttzHvPwuj3MhfDEuLylgNT03Ac-igvgE8a0XwRz8wSQX4ME4PBr-wRlB47cX0kXceH5NYB-tZEZb_kJnyClXYah8hWvehy7eRzJMkpcYXeGLDeZTWoQKiaNPPqMa8i69dfdj1aFVPshpqa0PCQzK-R2mrctXiiyLE_ZG7ytwl0C1pqPxDwbF0gz1ZlcLXCIETY7966BktgISmrs4kyl1EeICuY--EA5WUqyKyJnt8CVe6Va2VL-fhf-nS-ApW3a7X8KWNllzV3uFGXB4jOHg5spoUdjNuNLVLHVsKPdfmerReE2lW7739xISi7gl9AYBqgKSkaakCKd1GXPjZrHHj4f7YpLvJ8FMLuhMD2O0zn2IV9T18ry-SSruBk9M3JY",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "VLESS",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "VLESS تست",
+      "server": "example.org",
+      "serverPort": "443",
+      "password": "00000000-0000-4000-8000-000000000001",
+      "network": "grpc",
+      "serviceName": "edge+service",
+      "authority": "example.org",
+      "sni": "example.org",
+      "fingerPrint": "chrome",
+      "publicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "shortId": "aabb",
+      "flow": "xtls-rprx-vision",
+      "security": "reality",
+      "insecure": false,
+      "enableSessionResumption": false,
+      "method": "none"
+    },
+    "expectedName": "Andromeda ✨ VLESS تست",
+    "expectedAether": {
+      "aetherProtocol": "masque",
+      "aetherTransport": "h2",
+      "aetherIpVersion": "both",
+      "aetherScanMode": "ironclad",
+      "aetherEndpointCount": 5
+    }
+  },
+  {
+    "link": "andro://AXttt83iiCo4LK0df4JNlDwBx7UL4tHnCJ_FD83ef4HOfBWrWk1vvbPcWvfKUZrzXjVcb8_sqzuBaY6pploqZdRj8xgW6QqKxI8_mVCDBm3ymr6kOBJcLqoWXul5Ou7_fcN-itFfPI9KNwMd9orieszeyn_yp3Fn5kvtFUV-Egtg03Qb_tRYtIRFHoxVM_YScfxnqDr2NnJq4TXgI8XkXJW9ZBPdL10N3rsr0chJuwMgYT0A9agotnfz4XOtQ_qyAAkVPDm2XGbcyIGyISiHz54pVYq1mZVrPSYmUC2GZDjYdrGiMjaYWvWlhFlnKHY42rengGHV98XnwRFLZ25cscOIff9NaMdLOQBrpwfbjpnlLrBetnkGOp-X4GIymEUSIFpmL2_I4oU704VbgWNcsqVcLXitZSNT-_qoYN4BnK8uMgyFwVt-aRONvqKQ7xCvaOmx-qXbtLI9zmjyioMjc7c4f7me5GXJpdA5QbkWhQJq_TrO6PB-V91di_Hz4hvHw5xWLpYDeKkQe2yBLp0TDMw5_wHAKUlHtafXtZUkw5NLiUnLtOybk7bHSX3QG3lMa3rAHZhY7VTR52F32j_bO74qY9vMTjf8Iut6762K7b2JmMjxHWDW0G86nl7nawFsDkAx4P_WoZnF2ZkK7mt3GqxV1nM7SALQt4wMO6mdS9LWq87tKyDISTjXBHGWavxUWlH3lihEeGRyysVJiEoKAL6ke112IeqrEDUFiPAOKagzRs4Z2ugvC6jEXxYojskZ9rzG1zSg7wcKqpD1QTF6xUMJalElv1z1ZB2Tpi2Nulxrs-KggfmRHF8qoazC-2LsxR7VOSXaJJlTp5mT-gRtV8Un709dlZNvyNZII8nzI2kE8Pj7BV-YWQDEJOr1rnOGG94UWJfhcfO6z67pQT3zX45lwg6D63IvuuR1KdsvZuRFT8vDYTdELak19-uIOwjx8Rk31nO9Mcg0A8K_c3Pn70d8qgmRNwK7eVR4cqNI",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "VMESS",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "VMess + 100% ready ✨",
+      "server": "example.org",
+      "serverPort": "8443",
+      "password": "00000000-0000-4000-8000-000000000001",
+      "method": "auto",
+      "network": "ws",
+      "headerType": "none",
+      "host": "cdn.example.org",
+      "path": "/edge?ed=2048",
+      "sni": "example.org",
+      "alpn": "h2,http/1.1",
+      "security": "tls",
+      "insecure": false,
+      "enableSessionResumption": false
+    },
+    "expectedName": "Andromeda ✨ VMess + 100% ready ✨",
+    "expectedAether": {
+      "aetherProtocol": "masque",
+      "aetherTransport": "h2",
+      "aetherIpVersion": "both",
+      "aetherScanMode": "ironclad",
+      "aetherEndpointCount": 5
+    }
+  },
+  {
+    "link": "andro://AWvkB8_O_uQjKF247Z1V977C_dVxMR032izduzQLJN-BqtEn0MgOGqJzUSstLBZzVs2FtsK0lFXTBj9sWTmTcRqIej7sTJmB1aqITXyt9UkFXA_HARAB8xze86Yz4zzm-xzZHHiiok6NYoRaPnmEPtzpVOysRhgHwveohpqNHZZ7nrIIwN53kYQeaGnoJtICjBbGYvARzBKLtGpSMLqww5UeCrzP-l_lE3Efg8LgmefXDUjYBvJgqW7Vqr7NwFhL8mMTwMbZe8BokqVtgVniq8JzABbJENlXtctc7yk1Rix-Vcb5-DxbW0dSUzODex_x7WW8J9Vuer77a92nRDd4df8bjVZVrKJJpHE6ECwUJJVrhdFT2tPvcWhzfKUN0InhaWKWXKaENKUau1Hly_Xdvk8eTby6VLRT_MyU7s0RtnbTyZjMV8aJTQmYTm8iYfr0EX1wW3hb1gOgQcGRGgbUU0d0yn8ted9ge3PNbskXWZE0vHuYeEsOml78qNHr5jjbeYdKvzn_umXEC5ElwWoUiYtGJsCRbJ_GpGBGNdw3P6snwBbIYE7v4U6v9Cw-jpZVLu9FiVE",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "SHADOWSOCKS",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "SS",
+      "server": "example.org",
+      "serverPort": "8388",
+      "method": "chacha20-ietf-poly1305",
+      "password": "pass:with+symbols"
+    },
+    "expectedName": "Andromeda ✨ SS",
+    "expectedAether": {
+      "aetherProtocol": "masque",
+      "aetherTransport": "h2",
+      "aetherIpVersion": "both",
+      "aetherScanMode": "ironclad",
+      "aetherEndpointCount": 5
+    }
+  },
+  {
+    "link": "andro://AXD-_HF2hEfykZEbLGKbOIqIjM-6NJlQ1utDKyz1kaYD6xN4WKHV2iC0swGwattigdNPNXpNAjKMbgJYjsdfBosIXqE3lXgrJs5S06TPQKE1TlFMKUCfGmCT-Saom_f8J2ubdHY-JFSNtsGi8yQhWkV2bUeyu6EOK8N07vG8drVpww7X-uzU7MPcU7qcF2ABcsuMG0uuUStNea7BG0LObTFCNnlqenofNawff7G3lSW4nPJ5kg7xVfQSynhhYhCI_fG6O0ryxWzr6p1rX3uhoerb3_RNuFcRniPr0QHNEyqMMqyi_4tyEv0KN-1VHY4wVjOCy-c17CpX66gaQKl-1-s3zuqp6RStrEDhTMTjb-jD886Rrxt244g8G7h5NiIdD2vcvrzgi1zYJwfkBe3TYkaprPXq6jMmV8l8wOhMumSyeWIJMejWj8hdnWodurL_YFvwgeBiK3EfwoDzd9_DJeYlZ7ak-r6TlBeRd0jx81g5fGPqgFmdEGqbfmIfKPuk8qN7HmCAaAiOkWnpACOPsZ31KcFiV_0q9G0Iylfw3XmbsgAWDnHOzA",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "SHADOWSOCKS",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "Legacy",
+      "server": "example.org",
+      "serverPort": "8388",
+      "method": "aes-256-gcm",
+      "password": "legacy@pass"
+    },
+    "expectedName": "Andromeda ✨ Legacy",
+    "expectedAether": {
+      "aetherProtocol": "masque",
+      "aetherTransport": "h2",
+      "aetherIpVersion": "both",
+      "aetherScanMode": "ironclad",
+      "aetherEndpointCount": 5
+    }
+  },
+  {
+    "link": "andro://AXts95RE78GIP839IULTlZ34RdkCjqwj7-kVzO7hSx7DSIxRu9ssjI3_7mY6KuHjCl5VxIt4LwgokoA0e8-NmyIip9RQcio09dKGLiApiyIIkEURC_jM6Pa_oieUSQ3Ql7HlN8FV-A-DYPLlljkTFGSh47rmhPYPG14X91fqcJH7dNh5FeM4vkmEL1zQfNGSfLwfGcbmaPuhf789Fd70AyeXbNjUw6Fd-9kxRMq40KePnFUmOnPRuip-ODH00kRz2ZNOSytkHKNuF5q-thJti3MwKgv76EQZ_wfVCQkCKP3EFNZg0mMxKmgIBJCKwI0V5WM5hhZf4Ka3aIJoD1wGFx5MDAIB3vLkztYHYPMA5EwLkz19ToYof5eNhQBAR2nC6wvItNmCV-53Iq40rJnnbhHV_sRJFkjKdfflpCs8X6-ca9O-djThicKEpf0NFeElZtdTGKCPhDIx3n9aVFSqlkH0i_mM7vRxCGEztuWYguH-JOlHWeM8h3fk3oPuDZE4-ijgA_V23bKWe5dsV3w5zHNMbhwQ50OdnemxmLx1WDfKyPb1W6cmHHpXWXFmLlJ-oZZ6aHAQbakNb3KEsQyjPEr8GvxFj5fQOgMMBvT95U2ptFH0u4CaEcdrF0yGi0MAnK8D8JItTJeXsXYEUHcuO3gNWDJYVQEyjO0xSwCEwmUZWasPmiezk79w7nx0R_fIA_2KQ2eTYBEQYdC8K7Rk-fn1i_7Na4Zn6NCCIStXKbmq8P8q",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "TROJAN",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "Trojan",
+      "server": "example.org",
+      "serverPort": "443",
+      "password": "secret:with@symbols",
+      "network": "ws",
+      "path": "/socket?ed=2048",
+      "sni": "example.org",
+      "security": "tls",
+      "insecure": false,
+      "enableSessionResumption": false
+    },
+    "expectedName": "Andromeda ✨ Trojan",
+    "expectedAether": {
+      "aetherProtocol": "masque",
+      "aetherTransport": "h2",
+      "aetherIpVersion": "both",
+      "aetherScanMode": "ironclad",
+      "aetherEndpointCount": 5
+    }
+  },
+  {
+    "link": "andro://AQLcBlVgGf-5_IQbPVHUXLYDJJof_Bv8PcF0hitWAYZgBrgTdLaryyZ98g4QNm77qrXDyEUb2gWVzL-3wV652Ev-wQp98MupEftu5ghiw4HUvcdE-t9M6HvzJqnOxM9kI4fCaZMIk23lQnFaJwSaO5GxzFSdumrELzuNk0F-sQ_hDLK8vnFToPj1tp3T1IpjT7AyDcRwiy_P65VUHycfWZc9CxPhr1EcIuOACglFguY8UOzu5qt1ty17Oy8TWV5C5-qbDvmn5mVttBiN_ioflH6ltwdNa19s-dxCiXKPMAUA3HZGcWJNX8_CtFqxmXlEH0BLmSYUPMW07II3OfeLUWhcvkzmaKY5Q6wZLgEIU-251oDoFy5waJmV8nydYkdZKr6VpEn2AGs5YwbfOFtmbeE5wHpB32u8uxFxU9HosuDBQaA9HjO9jiZaGaA7-QcJIqoKEbJ7SteJOyDlXtSg7qhvzee_Oi42o0ZV7WdYHbq6ZJmMImy5hec7U0yxYLBBHCdxMJtutBkAAWhpUw_qDA1cUM0",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "SOCKS",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "SOCKS",
+      "server": "2001:db8::1",
+      "serverPort": "1080",
+      "username": "demo",
+      "password": "pass:word"
+    },
+    "expectedName": "Andromeda ✨ SOCKS",
+    "expectedAether": {
+      "aetherProtocol": "masque",
+      "aetherTransport": "h2",
+      "aetherIpVersion": "both",
+      "aetherScanMode": "ironclad",
+      "aetherEndpointCount": 5
+    }
+  },
+  {
+    "link": "andro://AZKj-bBPA-GV1hu9gHA-ev7HJ1q4_tLIkX-W3qtVQHh5kloKFx1da8BSrsmP4utKRyFhe0gAkaN0YeK1Yvx4skT3lTvCbwrOrWq_zs9hfZbuGIZmQuKkeziiPhAhTJ6F_I3YwTHA2sFStdjCYClH3Mpqmo68uWe_JalnpxhFg_WjmishhQUqF8CHwaOGBd1Terh7lEHZyo1QCPNSDq3LJfTtxBwQ7SYwEbSvBWWjYhC4c-pZkMsSHcbl9Y6K3LSHo4L-Sidw4Yy_83j8pzIhUdqp-CyKo2mLetPI0cJXJU9zpgYJnWq5nsUiODYUn8UDIHYnTQaLt33yyEPWImAO2Gkd0WtsI5BH3WjZcBrUOJu24WKuuBLLVMb6BwwFO_FlgqiO_bM-b0ARKtZnX7GgfdQnRSlQnHpg7AYKiEWrvBN2WLJBy2KHmUgA3x3Bvrt1nPOdiyQwygIWmYkfc-yG6xXcIcVKXgg3YCHG8kWclN7hA-G5TW63-wtNpNjtkXp7gBj1nUs8hCiWbNmctEVWBBdeO7Rloby0mQjUpiOIJeO_CLc0PqY0EAbB_q0bVr1NseruX-PwABQ2H0IkynO-tvoKkfds4NBZ0g4_v7K5dVycuM0Ac9y2stKpYwsZFFPIZeLH3N4KwapVz990vnmySEdvzo8w3b4_zJCpWwLvXpPBo5wTAM12cRV87OlXq82H7-4tLBCJb9ZxCLoTXfvU09WEsucY80B9ea4rQoOLYN76u8_yCV2XpzYSUVm02kHiJFncf8yHIXnyjznEWM5O",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "HYSTERIA2",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "Hysteria2",
+      "server": "example.org",
+      "serverPort": "443",
+      "password": "hy-secret",
+      "network": "hysteria",
+      "sni": "example.org",
+      "insecure": false,
+      "enableSessionResumption": false,
+      "security": "tls",
+      "obfs": "salamander",
+      "obfsPassword": "a+b"
+    },
+    "expectedName": "Andromeda ✨ Hysteria2",
+    "expectedAether": {
+      "aetherProtocol": "masque",
+      "aetherTransport": "h2",
+      "aetherIpVersion": "both",
+      "aetherScanMode": "ironclad",
+      "aetherEndpointCount": 5
+    }
+  },
+  {
+    "link": "andro://AY8RTZhn9iGt-Y--f3J6RmGfiACo9miO7tkStJsd6n1z-UhmUDXezF8dWktGLr3g2YesUcO3MfN2ztw1Jy-qbj2J1JkkmfWnpJDrnWhfyjDD4F92mE_mJoQPoHN0XhJCts4FvmiSYfNwQFkFLLcGx1L0VhJhdvMnziFLiKsk6tl8eCK-G1jXVzOoYggc52DEnIzb0Duaxk6WAYkjlj2VqgJosUyiFMX2ljbUEUHeYLdpLi2JPFxq81Oc3IWNOcQTsv4pV0h2hvR5GxgvJeDkdgli9wDprGfck4GrTpRL1RDYgaPm1Geq9zEPnqCZ5HehKF_FRPCTDc05IQhKgcnIV7prOmIzBRUyildyyxe65fwvpOcRv1R18dGPgJRRloAVcQvkc2aCnebl9DvbyEHgq-6LKDjbneKUrH5Ilz6lhJKVdoSxbSyvLhaSLE9AYa2J29jOu1vqxUvke6Eu5BKMqDHNBbKT2zaoBOTqneLtZ15n8iC-K1Sst97TGOyedXePVSVlgpmcYwdJ034rBVmKP_l7VMJ3IkaI1OItj5cohNTfy7Is5OWz5IYAtN70IG_0eWdMJCDUlxkb4jzYPkKyRiXneq8LaEp0hbQaoAC_oz9NWyPOJ4cPwzYX9TRx11XnoBKBsY6jMJ-ywUzc6viy_Xf4Z25Qg14vKHOp2lTeelGu42GNrw54hn1s6TEPEQs4A6lB1e6r3RUzqo3nQLFWW3ijYzImgbIBwsLNeUHZPgz201eqVTfzE4VC0ZXre3TrnA7FMBpnXOTMsQtyOExv_0EYWEwC4f2JfXv5bNwfHURyTc12xFzetxsg2f8XoUg",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "WIREGUARD",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "WireGuard",
+      "server": "example.org",
+      "serverPort": "2408",
+      "secretKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "publicKey": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
+      "localAddress": "172.16.0.2/32",
+      "reserved": "1,2,3",
+      "remoteDNS": "",
+      "mtu": 1420
+    },
+    "expectedName": "Andromeda ✨ WireGuard",
+    "expectedAether": {
+      "aetherProtocol": "masque",
+      "aetherTransport": "h2",
+      "aetherIpVersion": "both",
+      "aetherScanMode": "ironclad",
+      "aetherEndpointCount": 5
+    }
+  },
+  {
+    "link": "andro://Af1OXX6qNfTj_AnUhID0DFJ7Q8OnZaQ07y0cJfzLqaa7PLfd9a_E7H4OKrnSwu4DRvNVNOK5xINd76z71iAn9zYISrxiy2J0g3u8nuSCYlG1osZYPXgDQ1HarR_9BCn8ckX1GZbsf5y35BCQZUESKVPCIYEuEGNi8jafmryv7KX3heFXLrUuxxtnadHwf_MXMnlkE64Lyzdij74eQPR5eufdl4m0eqKg_fHK6wHSyb-U2ckDjD8lVqsuK8mn_PdXt_M6_Y2IMk35QfqULA8v7_CO7eYUH60TYAnzXTzDgklJhNAmNSyMBr0AvgR7w0V0JcpSEgWo8FSk2ryCOXQvq3fOJ7fb1_yE4M3_JMIG3v7yhH6_nOnJqyq7AsThtR3_PihhkJDUB9W6NtTxJEfrbGYt_OVzpSLX4nNsVCcfzAzlUi3jrmclIvNXT9xXgVeAB88jU_1cmJ4YlLMSHQxVrqzbi4C7hCNtK6u0ImZb7yQ2CeNoOg9XpHbiURNIwDQDRnD0HkKiVZXwvA",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "HTTP",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "HTTP",
+      "server": "example.org",
+      "serverPort": "8080",
+      "username": "demo",
+      "password": "p@ss"
+    },
+    "expectedName": "Andromeda ✨ HTTP",
+    "expectedAether": {
+      "aetherProtocol": "masque",
+      "aetherTransport": "h2",
+      "aetherIpVersion": "both",
+      "aetherScanMode": "ironclad",
+      "aetherEndpointCount": 5
+    }
+  },
+  {
+    "link": "andro://Ad6wPXjJEcxLjeGGpU7yhWWa9xUo0l_POsJZgZhXA9Q0bnzMxUL7BCZWic0Ap7gqcvjUcQe4LF2f2AT5_aHtajggK2HmheOBta6Nz_kYXkfBF9xUuzJbgffRSyS6PkXygYmvstStB2OR8pL5NtDtnzHOfwhxaMFt1iNwvI_4QHL63vCBxqJXyi0mMjcJCnj1WObWcc_krZplb2juqfEYmoDubsWdqvyxVgmLr_HHzu7dDWWMEDKVu4ywP7cKhDGrF01E-oz_fGgToeC_hLucB_FOUhikKyy6UA9Nn8dLBrPq1pGiAE4HE62GjOAPmvWYlI8ZjhCsFeTzFSw05PiO1dZUUrRqWDET2YeX3FqlGVEyEm8K6MGD2NXsHpElHZ9j9qGm2xpdOULqkIVY4f8Vew4-FgDsVKQvirnpt5DzxA9ecOy1W6gRW1cPiBpfkNn3INPbvgvuMnS35qvajNtQEF7_VbNOYS898BpZ8MQRWUMHbGo0nckfbxRaaS_qXXMOgEg50iX5QShB6OyRYUXH6njgUaLSxW1lRUbbwZyNNUkJgRWshzcGlZ1quzRcW1yH0PtPyZ_3nf91Noka8kt6IzK0xc-o_g2q29v25KBvJ8fgFYyPW78tciXyhcL5yy6n4-qZK1T7EU6nH2AfjkF0Ob8i3VcU77mdE0MliBwCtIEks75jFbHSMxfisLgRgSekJQBMmJfkSxaAFs-C9EsUksfOGRKXxxAsF49-bw9j8e8OiaBUV9XFe1GMjAuNPTI2X-C8Nzz3rht2Mpd3tgHjxfAdCh-Dw5ODkgYEBmBehfBte6fls2f8WGVfqTNaSdOox5ohfe-oUi6EWNBC-cqqD-u3KMcAipdy4caDQAkIyDIZVu1DiwF8g9tsjTOLbvtCXHmmFJxikI3TgL-9xvwSjJi72TCxcG_dF_bf0jfMEmU4VODXVgmbKzhrqyWTUNuu_eBIs5nhYYQcPtyNuXhWkE0l_W2trenpV9ql5KLWg1hMHOCHWcfyCS8E1CH1bpdoQu0FNT-jnrxS0UCOL8OObOhsHvHCu_WH3fhCO5lt7h3Nrdth6zs",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "VLESS",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "VLESS تست",
+      "server": "example.org",
+      "serverPort": "443",
+      "password": "00000000-0000-4000-8000-000000000001",
+      "network": "grpc",
+      "serviceName": "edge+service",
+      "authority": "example.org",
+      "sni": "example.org",
+      "fingerPrint": "chrome",
+      "publicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "shortId": "aabb",
+      "flow": "xtls-rprx-vision",
+      "security": "reality",
+      "insecure": false,
+      "enableSessionResumption": false,
+      "method": "none"
+    },
+    "expectedName": "VLESS تست",
+    "expectedAether": {
+      "aetherProtocol": "wg",
+      "aetherIpVersion": "v6",
+      "aetherScanMode": "verified",
+      "aetherEndpointCount": 10
+    }
+  },
+  {
+    "link": "andro://AZxKnwb-g3wUA6HMHXu5H6o7_wzu9YdqJI03bKiKbVXKDCsrWfYS1IWxQ0fPQMgvh1y9U_Q80LUygx68mMis5jNqBdOe_oPvjE9lmaF6wzwYrt9t9ACMdD6fsewWmO8ffw7jdJYTuIvXwc48x_9H4VUIAiv4HFyWLvD607aRSSfu2I2juWrssxdwKdwGKRThu6OUQtGbQmOTw8cRWxAvDXY512GjF9Ck6mTHdhEPqfcE24Yaz3Papez8-fRy2jN_VAQgLXjYqXno0IjuphRAy3wI7GZuFEP7ifstWED4R_oKJbdUOGiKjVaR1LRYnz_ByZHRKKHJzM3HNdJOOiD1_I_mVKZQrasxJoJ9OqdFW_E7srYnLWyVmfXryTC9nUJB81S3Fjppz-32bFJaE2pR8VnA2YwEAXs-r5dT5pFT0IXAzWIqIp12Lm7JDuQ37YyqY9AFiEeYjusfUFBspIjf0Dyq_IXeAwblPumvnVtXpMleKUO_WzYrh1-Fz3PHyAIte_JtdaUMdYUNqP92VrAAsYblSJ-qU7xA6GH8XOCvtPBKf8LaqYiUuPvPG0LbP_IrJdQgkgxRGdwWrb_u9wK4Z9xIv4LqwhMq9GHwG5uqCLsbOcHYEN9d44vYEoJk1ckjyT_FEYlbsjSofcpM242vJiffD8D4bRalJgCd_YaEIKyndSwlo77ci7dd-j2Qlya0MFyFn-qKl_hwVVqplbPHySVja18sjnRg5R15bCJgXzJhYwXLuh9I-eSQxBegi2EVZjJoQ78cQgAZgqvi1mrp9t9crvLtcelUqRFyn6tq6jr3MI1pay1h953H0009fzREPekdpmquyUQffmM-JaUx780gWjPgrw7mJ3ZTOvg0bmXtKq_NAhA_RDYRUec2nyxbVN0m-ELu3_HGWvo54qKohVkcA9gLp2evTSqggvVnJgih1iiTTwUUl42XI_E4RSXO-FhUO669Bfg3rhmAOwmIBI0YSkZt9FB1TcJSYEa8ZRtngv60WAGlSBtGoLVn07bqf2qKdIq3aSrN3E_HKB-oHFUtkrJdA2_o3p0OUOgeYWIArK3Wvjb_kg",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "VLESS",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "VLESS تست",
+      "server": "example.org",
+      "serverPort": "443",
+      "password": "00000000-0000-4000-8000-000000000001",
+      "network": "grpc",
+      "serviceName": "edge+service",
+      "authority": "example.org",
+      "sni": "example.org",
+      "fingerPrint": "chrome",
+      "publicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "shortId": "aabb",
+      "flow": "xtls-rprx-vision",
+      "security": "reality",
+      "insecure": false,
+      "enableSessionResumption": false,
+      "method": "none"
+    },
+    "expectedName": "VLESS تست",
+    "expectedAether": {
+      "aetherProtocol": "gool",
+      "aetherIpVersion": "v6",
+      "aetherScanMode": "verified",
+      "aetherEndpointCount": 10
+    }
+  },
+  {
+    "link": "andro://AfCOIfUmhekKb7dy6Ba0c9vCkZM-n9762YYsrHadnvpWKO2Wtz7ekGb0ASdivYUn48acC69j9qk9U5y4YN-NU0xP-dnnDj0ywLTrvBcJKyDhFp_JgP9l1T7bjPTptKGfKS7Stx8h7KFMXKDJSIcgCflQTjCpkrSaXFEO5xhO6cXqwGmXpdUdARhyVUTLanoKExIZgAB-lzmm8LYHKc91xlLUWz7mrJPTWmQPTrvdfpEyEnSTB7X6Uke_l2080nayN55XJp-FEOFDEM55LEokC-WhGY8b9SToZZlihjw1Vlcnjt8lfWPIYcnltAROVXcP74iLgMaGMH7zy4mlFu5hAOAsC8_lHVvF4-u6gGFl3573OcUVm6U-fH5Q0RPv4gXOaHxKtWeihdHJkRMiFqoEhguiRoNtPTQHOsmxccQPl4t9kJrri-kLfvzzGZtGCFcTEPVWixuvIV6YxbfOyaI5qInIUmObtcBgcYh-zVXoVvTGeWfVjwNObEY42yxeLG7wH20nIUJ3dNCBcYxNYKe1OKM0dD_Xlv_OBoSiwG2nobVj76YYfRPmrR8D_gKEn8_j4MNipa-F-6gOG6YE7OPBWVATlWmx_cjj9O01AK-CUrG1xcAJTmEEPiIID6uJeBONn-w_Vy5IGwNdCQg02MSTqGV83HYlBnQozQGXMiF3wNlbGroohZdqxjrKIf4h1B4R1Z-Jt0Ax8URPvksL7FxZ2Bgrm7mZFkY6My47vaQPrQpuGnRvQV7EX_vmkO5zZASndCUuT_68LTcV-O1-K5Ts2g0VQ0Aqo74sVYCL2_k3m8Sz68cc8kWBx54rI0DNaOCspKzTkBqbX7WUDFyEcUyJXyZlHeX3QhU1C9zqvab2FJ7zMmceNQ2DgRyJyu-tmRrOXFwm1TUNHeh3rBaajjtW3Vkg3fR5rpM-DFUlV-XNKR6c_3j6ip5Tr-6-1YamB5RIzxJ4yrJhLc9kjNZnZIeTUxqAcI95qdTI2M8W9W7q48LrL2jGMx9akxw4JStOdmvwHpPWDj0nXBxgsDUjhWBY2eLkiVr9fE1RQO0pBuRfpwDC3SVkKwwwCUbEbc4xHhvaQp_24A",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "VLESS",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "VLESS تست",
+      "server": "example.org",
+      "serverPort": "443",
+      "password": "00000000-0000-4000-8000-000000000001",
+      "network": "grpc",
+      "serviceName": "edge+service",
+      "authority": "example.org",
+      "sni": "example.org",
+      "fingerPrint": "chrome",
+      "publicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "shortId": "aabb",
+      "flow": "xtls-rprx-vision",
+      "security": "reality",
+      "insecure": false,
+      "enableSessionResumption": false,
+      "method": "none"
+    },
+    "expectedName": "VLESS تست",
+    "expectedAether": {
+      "aetherProtocol": "mim",
+      "aetherIpVersion": "v6",
+      "aetherScanMode": "verified",
+      "aetherEndpointCount": 10
+    }
+  },
+  {
+    "link": "andro://AYlvN-WvKwORSD90yzOafbcMKKpokmEhmCmzx_fmH9nqYa2odM4-VSATOQLRdaGRbtHR5-62eNE7-j-1wWGIvk7c-_nWFwXBp83aVo4O9mUQaiXxcAy14zZL4-Y_SfORhkzemTpyF10cKE2ImnnJmVoBEtM0kZzILVm8VsAhpmsqp0TnnmxQ3kydAhxOFjwQ8VB6F_AdDq-L5uhmxTl7Xr_njLLiaN0Iv0qnuj9AFAJ56MiOsNjER_PF1wNSgIG3W70vZ7pv_qPI4JuBNPd_BPnMFTo5V0ofeOWaXmYp8QOLHa4eqiZI-a28MRf1T6mHHdPPi7o3AZzxohAqaVwgcCyOQbeW7CPlZiM8UR85vGyiSZLl4_Er30cyxkLPWzo7Ehd1z82vBp7ye2miKF6cnBnsXEAvjehFYH6z_IUBk9vnFuXOZbLy4A1L1YUcUNycJ8eBkoGp_nkzZFqQpp4FYjADI-Jv9ir9FGkyI-mhK2s7z1LIivm74xwuGhpeyTj5wWp8QB57IduXfTv_j-IKbcavJzq6I_3-OgnR3meIStDobGRWafFMEPi8VC2NeyfZDXcvla6R21eWjkMfTmO5eQ_K66Q4uU6BvokY0UT5kmYdlToU97aH6N8oXyc84wY-AAeSLwbOvm0z1YGp7C6wOPQHobKXriIyWctyonp_M-edrUy_gXSLdnNQhC8ojX4PFT7UEhDVr_sTdwIvD_1lkFjjN86Z52EKjJSqiOwnLxL_kZoyWGKYQOC2SOe893MaEV1qyuTuOkBq3D-TBRKquvNdcDWKiszsPteH5nZ2_JDU_kLafOTLVPqiSYpnrcuD5tTLISVlxHs_4iLgePjIhearXdNVlODNRHAkcNrRHnh-FwMxoyxfYmX9nsRZd4yWAwGi5o2bbnxlFLuBWgevM-aNFGo7EvqlZUZ-CRKuMNDNcNn6W9xqZqN0uXoorFg4-QFtNcZQcXDUCqF-4uGP047OIdMUdQ-Ag0Lr5DbsZTaZ3k3ukm9u0U2G2f7JjnPGgmGXJCc1U8DTq8Jw5PEuxqpa5B1XOMHRqleAscqclga5oyFJOWnhAjwFvxYtCZlxXsIH66wxUTkrgO5HAgkY",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "VLESS",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "VLESS تست",
+      "server": "example.org",
+      "serverPort": "443",
+      "password": "00000000-0000-4000-8000-000000000001",
+      "network": "grpc",
+      "serviceName": "edge+service",
+      "authority": "example.org",
+      "sni": "example.org",
+      "fingerPrint": "chrome",
+      "publicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "shortId": "aabb",
+      "flow": "xtls-rprx-vision",
+      "security": "reality",
+      "insecure": false,
+      "enableSessionResumption": false,
+      "method": "none"
+    },
+    "expectedName": "VLESS تست",
+    "expectedAether": {
+      "aetherProtocol": "wg-over-masque",
+      "aetherIpVersion": "v6",
+      "aetherScanMode": "verified",
+      "aetherEndpointCount": 10
+    }
+  },
+  {
+    "link": "andro://AU4dxhG_kSNQJ2GpiobZ6BvQRtQ0aW7ZK8PZa1oLsvEVih3pwT5yXqSHaCMLIxA8U5GPlgvTx9VG1lNPpG9pvrK-Fd8NYgTwd-0rgrnhQzdC3FZzCdmk_3rViI6rtRxepsxOZ6HT1rPdDtskX3a1tNWkT7GhxJN3DmsAYvB0Tr_7oVxbxQgKjDQmTgd0LqgwmC0ipN_dBkpyZyGLHKODXgWFxaOYW04wmJubVDzDDO4ABDyBJIZQHAsYxFdyMgPHPhXvUP1EAaK7iuBQjE16_qNazTMbfDJnFk0Y6qWuLxk-2lKGDsSEBo8kPoQBzfOlRSySmBnHaPM7MjEVxzM2OMcr2DnnYnP84TBrQQUvQTPVyF1rVTlduCb3I9n6ZVsw6MmYKbQjNH2D_sMZEhS8_d0uKhSp7E5zP5mXuDfFd00_cUNZtJ9R7f-wn9Lmsf0qGxtiMpe-dds5zml2tyiClQ1QuW_Pbz8XNyZdjXBEhd66kePJsMb281Vp0xPVG5oh3Dd16w9nWr1920b6gMwOdrMyevFVddJONt3609NbS18a0KL9XPpITKHUQywwt4LjW-zb2fH4IZoHnpHKycQoJUSNiOco6snedcYCVorBL8IaJeV5bjJ0n4JcFWpZ6BkcYq6xlBbNKLAwWgV1dvfICbgECSbgmXKq21igX4XbTRpGmT8w-wgKCGiKIXjpIinXv-lwqazVT6mWnUb3mhMmXxmeopKsMYDNLGn_0DHys_XhiY5NsxL4Du8gkyW2V6tSBGhKTV-zzMoi80n2GTFHIoUC_1Q2fzl568e28JJjNb03RE20u9f6knB4V9K-YFnBaDj8DnGDE4KSwR1Myx7gdDyGyBuLiK6wEZEXYU8g6c9JbHl5Qp-e3VuS0nps2pK1s0K688b1Fryzabsyz_6MfHEIIiZiWn8rgVbxuAfCE8J-kp3iRtmBWJiRdE5I5RVTv-oQdRFq0455elAKkJ7qU7LPhkEDPPIsfVZXVTk1kB0XWH_b5sXvqTDfTi1qphfUV7KwQlOJA3I04H4yNUEZTxAWvyn1F74lq2nB_MBnRPfC_79zHtBfCTguerH_BlgvTx62F2dBia37gHY3HyiDx5_Tq5ta74xmrdTrHftpq-UD_po",
+    "expectedOutbound": {
+      "configVersion": 4,
+      "configType": "TROJAN",
+      "subscriptionId": "",
+      "addedTime": 0,
+      "remarks": "Trojan",
+      "server": "example.org",
+      "serverPort": "443",
+      "password": "secret:with@symbols",
+      "network": "ws",
+      "path": "/socket?ed=2048",
+      "sni": "example.org",
+      "security": "tls",
+      "insecure": false,
+      "enableSessionResumption": false
+    },
+    "expectedName": "Trojan",
+    "expectedAether": {
+      "aetherProtocol": "masque",
+      "aetherFragment": true,
+      "aetherFragmentSize": "10-100",
+      "aetherFragmentDelay": "0-10",
+      "aetherEch": true,
+      "aetherEchDns": "https://example.org/dns-query",
+      "aetherEchDomain": "example.org",
+      "aetherDns": "1.1.1.1,[2001:db8::1]:53",
+      "aetherMasqueSni": "example.org",
+      "aetherExitLoc": "!IR,RU",
+      "finalMask": "{ \"type\": \"test\", \"value\": \"a b+c\" }",
+      "dialMode": "oob.0",
+      "tcpUserTimeout": 12000
+    }
+  }
+]

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_import_title">Nhập cấu hình?</string>
+    <string name="external_import_message">Chỉ nhập liên kết từ nguồn đáng tin cậy. Việc chuẩn bị cấu hình có thể ngắt kết nối VPN hiện tại.</string>
+    <string name="external_import_accept">Nhập</string>
+</resources>

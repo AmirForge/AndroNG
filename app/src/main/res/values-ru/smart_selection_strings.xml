@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aether_smart_selection">Smart selection</string>
+    <string name="aether_smart_help_title">Об умном выборе</string>
+    <string name="aether_smart_help">При смене сети или обрыве соединения выбирается рабочая точка из сохранённого списка. Нужно не менее двух точек.</string>
+    <string name="andromeda_galaxy_action">Исследовать галактику</string>
+    <string name="andromeda_art_description">Андромеда: женщина из звёзд с цепями на запястьях</string>
+    <string name="andromeda_close">Закрыть Андромеду</string>
+</resources>

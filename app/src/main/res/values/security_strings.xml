@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_import_title">Import configuration?</string>
+    <string name="external_import_message">Only import links from sources you trust. Preparing these profiles may stop your current VPN connection.</string>
+    <string name="external_import_accept">Import</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="external_import_title">کانفیگ وارد شود؟</string>
+    <string name="external_import_message">فقط لینک منابع مورد اعتماد را وارد کن. آماده‌سازی پروفایل‌ها ممکن است اتصال فعلی VPN را قطع کند.</string>
+    <string name="external_import_accept">وارد کردن</string>
+</resources>
