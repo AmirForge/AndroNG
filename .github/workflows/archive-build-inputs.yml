@@ -1,0 +1,38 @@
+name: Archive developer inputs for build 775
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  archive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Download existing developer assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download v1.5.0-775 --pattern 'AndroNG-native-inputs-775.zip' --pattern 'release-manifest-775.json' --dir developer-inputs
+      - name: Verify unchanged files
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          manifest = json.loads(Path('release-manifest.json').read_text())
+          bundle = Path('developer-inputs') / manifest['nativeInputArchive']['file']
+          assert hashlib.sha256(bundle.read_bytes()).hexdigest() == manifest['nativeInputArchive']['sha256']
+          assert Path('developer-inputs/release-manifest-775.json').read_bytes() == Path('release-manifest.json').read_bytes()
+          PY
+      - name: Archive outside the application release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view build-inputs-775 >/dev/null 2>&1; then
+            gh release create build-inputs-775 --draft --prerelease --latest=false --target v1.5.0-775 --title 'Developer files — Build 775 (not an app release)' --notes 'Developer-only files for rebuilding AndroNG 775. These files are not needed to install or use the app. فایل‌های توسعه برای بازسازی برنامه؛ برای نصب به این فایل‌ها نیاز ندارید.'
+          fi
+          gh release upload build-inputs-775 developer-inputs/* --clobber
