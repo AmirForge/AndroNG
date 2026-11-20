@@ -1,0 +1,41 @@
+name: Transfer locally signed build 775 APKs
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  transfer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
+        with:
+          log-accepted-android-sdk-licenses: false
+          packages: 'build-tools;36.1.0'
+      - name: Download source APKs and public signature transfer data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download v1.5.0-775 --pattern '*-unsigned.apk' --pattern 'signing-transfer-775.json.gz' --dir unsigned
+      - name: Reassemble exact locally signed files
+        run: python3 scripts/apply-signature-transfer.py unsigned/signing-transfer-775.json.gz unsigned signed
+      - name: Verify Android 9 signatures and existing release certificate
+        run: |
+          for apk in signed/*.apk; do
+            "$ANDROID_HOME/build-tools/36.1.0/apksigner" verify --min-sdk-version 28 --verbose --print-certs "$apk" > verification.txt
+            grep -Fqi 'Signer #1 certificate SHA-256 digest: 7e82bebcb7aa9fe40ab6195a1ac2019ce594fda6a6e0ba7ca263bd9e7992ad06' verification.txt
+            "$ANDROID_HOME/build-tools/36.1.0/zipalign" -c -P 16 4 "$apk"
+          done
+      - name: Upload verified signed APKs to the draft only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload v1.5.0-775 signed/*.apk --clobber
