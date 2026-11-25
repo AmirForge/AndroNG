@@ -121,6 +121,13 @@ sealed interface AetherDependency {
             return Single(core)
         }
 
+        /** Point a temporary test configuration at the test's own Aether listener. */
+        internal fun moveSocksOutbounds(config: JsonObject, fromPort: Int, toPort: Int): Boolean {
+            val matching = socksOutboundSettings(config).filter { dials(it, fromPort) }
+            matching.forEach { it.addProperty("port", toPort) }
+            return matching.isNotEmpty()
+        }
+
         /**
          * Has what the Aether [core] of the custom configuration [config] sends out leave through
          * Xray, as the configuration of a profile does: the secondary-socks inbound on [port], three

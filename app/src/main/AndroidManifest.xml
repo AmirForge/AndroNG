@@ -65,6 +65,18 @@
                 android:value="true" />
         </service>
 
+        <activity android:name=".ui.soar.SoarActivity" android:exported="false" />
+        <service
+            android:name=".service.SoarVpnService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:process=":soar"
+            tools:ignore="VpnServicePolicy">
+            <intent-filter><action android:name="android.net.VpnService" /></intent-filter>
+            <meta-data android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON" android:value="false" />
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="vpn" />
+        </service>
         <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"

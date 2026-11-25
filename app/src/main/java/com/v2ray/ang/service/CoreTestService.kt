@@ -30,6 +30,8 @@ class CoreTestService : Service() {
 
     // manage active batch workers so each batch is independent and cancellable
     private val activeWorkers = ConcurrentHashMap<RealPingWorkerService, String>()
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var latestMeasureStartId = 0
     private val cancelAction by lazy {
         val intent = Intent(this, CoreTestService::class.java).putExtra(
             "content",
@@ -109,6 +111,7 @@ class CoreTestService : Service() {
     }
 
     private fun handleMeasureStart(message: TestServiceMessage, startId: Int, requestId: String) {
+        latestMeasureStartId = startId
         LogUtil.i(AppConfig.TAG, "CoreTestService starting worker   subscription ${message.subscriptionId}")
 
         val guidsList = when {
@@ -126,7 +129,13 @@ class CoreTestService : Service() {
                 healthOnly = message.healthOnly,
                 onEvent = { event ->
                     if (activeWorkers.containsKey(worker)) {
-                        handleWorkerEvent(event, message, requestId) { activeWorkers.remove(worker) }
+                        handleWorkerEvent(event, message, requestId) {
+                            mainHandler.post {
+                                if (activeWorkers.remove(worker, requestId) && activeWorkers.isEmpty()) {
+                                    stopSelf(latestMeasureStartId)
+                                }
+                            }
+                        }
                     }
                 }
             )
@@ -174,10 +183,6 @@ class CoreTestService : Service() {
 
                 MessageHelper.sendMsg2UI(this, AppConfig.MSG_MEASURE_CONFIG_FINISH, event.status, requestId)
                 onWorkerDone()
-                if (activeWorkers.isEmpty()) {
-                    NotificationHelper.stopForeground(this)
-                    stopSelf()
-                }
             }
         }
     }

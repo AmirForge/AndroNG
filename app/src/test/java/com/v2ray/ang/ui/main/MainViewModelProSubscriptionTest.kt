@@ -60,9 +60,10 @@ class MainViewModelProSubscriptionTest {
         whenever(source.getSubscriptions()).thenAnswer { if (group) listOf(SubscriptionCache(AppConfig.PRO_SUBSCRIPTION_ID, SubscriptionItem())) else emptyList() }
         whenever(source.getServerGuidList(any())).thenReturn(emptyList())
         whenever(source.getSubscriptionItem(eq(AppConfig.PRO_SUBSCRIPTION_ID))).thenAnswer { if (group) SubscriptionItem() else null }
-        whenever(source.ensureProSubscription()).thenAnswer { group = true; AppConfig.PRO_SUBSCRIPTION_ID }
+        whenever(source.ensureProSubscription(AppConfig.PRO_SUBSCRIPTION_ID)).thenAnswer { group = true; AppConfig.PRO_SUBSCRIPTION_ID }
         whenever(source.importFreeProfiles(any(), eq(AppConfig.PRO_SUBSCRIPTION_ID))).thenAnswer { imported++; 1 }
-        whenever(source.rollbackProImport(any(), any())).thenAnswer { group = false; true }
+        whenever(source.rollbackProImport(eq(AppConfig.PRO_SUBSCRIPTION_ID), any(), any())).thenAnswer { group = false; true }
+        whenever(source.commitProImport(eq(AppConfig.PRO_SUBSCRIPTION_ID), any())).thenReturn(true)
         vm = mock(useConstructor = UseConstructor.withArguments(mock<Application>(), source, quick, suspend { null }, 120000L), defaultAnswer = Answers.CALLS_REAL_METHODS)
         doNothing().whenever(vm).toast(any<String>())
         doNothing().whenever(vm).toastError(any<Int>())
@@ -109,14 +110,14 @@ class MainViewModelProSubscriptionTest {
         whenever(source.importFreeProfiles(any(), any())).thenReturn(0)
         submit()
         assertNull(state.credential); assertFalse(vm.uiState.value.isPro); assertFalse(group)
-        verify(source).rollbackProImport(emptySet(), true)
+        verify(source).rollbackProImport(AppConfig.PRO_SUBSCRIPTION_ID, emptySet(), true)
         Unit
     }
     @Test fun `credential storage failure rolls back imported profiles`() = runBlocking {
         state.saveFails = true
         submit()
         assertNull(state.credential); assertFalse(vm.uiState.value.isPro); assertFalse(group)
-        verify(source).rollbackProImport(emptySet(), true)
+        verify(source).rollbackProImport(AppConfig.PRO_SUBSCRIPTION_ID, emptySet(), true)
         Unit
     }
     @Test fun `stop cancels download and clears feedback without creating subscription`() = runBlocking {

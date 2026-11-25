@@ -19,6 +19,8 @@ import java.util.concurrent.TimeUnit
 
 object SubscriptionUpdater {
 
+    internal const val UPDATE_INTERVAL_MINUTES = 300L
+
     // -------------------------------------------------------------------------
     // Public API — the only methods external callers should ever use
     // -------------------------------------------------------------------------
@@ -39,11 +41,11 @@ object SubscriptionUpdater {
             if (forceReschedule) {
                 ExistingPeriodicWorkPolicy.REPLACE
             } else {
-                ExistingPeriodicWorkPolicy.KEEP
+                ExistingPeriodicWorkPolicy.UPDATE
             }
 
         MmkvManager.decodeSubscriptions()
-            .filter { it.subscription.autoUpdate && it.subscription.url.isNotEmpty() }
+            .filter { it.subscription.enabled }
             .forEach { sub ->
                 scheduleOne(
                     context = context,
@@ -106,28 +108,25 @@ object SubscriptionUpdater {
     ) {
         val subItem = MmkvManager.decodeSubscription(subId) ?: return
         val rw = RemoteWorkManager.getInstance(context)
-        if (!subItem.autoUpdate) {
+        if (!subItem.enabled) {
             cancelOne(context, subId)
             LogUtil.d(AppConfig.TAG, "SubscriptionUpdater: cancelled task for ${subItem.remarks}")
             return
         }
 
-        if (subItem.url.isEmpty()) {
+        if (subItem.url.isEmpty() && !ManagedSubscriptionUpdate.handles(subId)) {
             LogUtil.i(AppConfig.TAG, "SubscriptionUpdater: url isEmpty for ${subItem.remarks}, skip")
             return
         }
 
-        val intervalMinutes = maxOf(
-            AppConfig.SUBSCRIPTION_MIN_INTERVAL_MINUTES,
-            subItem.updateInterval
-        )
+        val intervalMinutes = UPDATE_INTERVAL_MINUTES
 
         // Base initial delay on the last successful update time persisted in subscription.
         val lastUpdated = subItem.lastUpdated
         val intervalMillis = intervalMinutes * 60 * 1000L
         val now = System.currentTimeMillis()
         var initialDelayMillis = if (lastUpdated <= 0L) {
-            0L
+            intervalMillis
         } else {
             maxOf(0L, lastUpdated + intervalMillis - now)
         }
@@ -178,6 +177,10 @@ object SubscriptionUpdater {
             if (subId.isNullOrEmpty()) {
                 LogUtil.w(AppConfig.TAG, "SubscriptionUpdater: missing subId in worker input")
                 return Result.success()
+            }
+
+            if (ManagedSubscriptionUpdate.handles(subId)) {
+                return if (ManagedSubscriptionUpdate.refresh(applicationContext, subId)) Result.success() else Result.retry()
             }
 
             // v2meda: a subscription gone has nothing to update.

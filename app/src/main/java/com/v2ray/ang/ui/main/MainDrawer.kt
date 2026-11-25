@@ -52,6 +52,7 @@ import com.v2ray.ang.ui.compose.AppDivider
 import com.v2ray.ang.ui.compose.verticalScrollbar
 
 enum class MainDestination(@DrawableRes val iconRes: Int, @StringRes val labelRes: Int) {
+    Soar(R.drawable.ic_soar, R.string.soar_title),
     Subscriptions(R.drawable.ic_subscriptions_24dp, R.string.title_sub_setting),
     PerAppProxy(R.drawable.ic_per_apps_24dp, R.string.per_app_proxy_settings),
     Routing(R.drawable.ic_routing_24dp, R.string.routing_settings_title),
@@ -77,7 +78,12 @@ private val drawerItems = primaryDrawerItems + listOf(
 )
 
 @Composable
-fun MainDrawerContent(drawerState: DrawerState, onNavigate: (MainDestination) -> Unit, onAction: (MainAction) -> Unit) {
+fun MainDrawerContent(
+    drawerState: DrawerState,
+    tutorialsUrl: String?,
+    onNavigate: (MainDestination) -> Unit,
+    onAction: (MainAction) -> Unit,
+) {
     val drawerScrollState = rememberScrollState()
     var contactOpen by rememberSaveable { mutableStateOf(false) }
     val colors = MaterialTheme.colorScheme
@@ -147,6 +153,37 @@ fun MainDrawerContent(drawerState: DrawerState, onNavigate: (MainDestination) ->
                     horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Icon(painterResource(R.drawable.ic_real_delay_bolt), contentDescription = null, tint = colors.onPrimary)
                     Text(stringResource(R.string.pro_subscription), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+            }
+            listOfNotNull(
+                Triple(R.string.usage_report, R.drawable.ic_usage_report, { onAction(MainAction.OpenUsageReport) }),
+                Triple(R.string.config_converter, R.drawable.ic_build_configs, { onAction(MainAction.BuildDiagnosticConfigs) }),
+                Triple(R.string.soar_title, R.drawable.ic_soar, { onNavigate(MainDestination.Soar) }),
+                tutorialsUrl?.let { url ->
+                    Triple(R.string.drawer_tutorials, R.drawable.ic_help_outline_24dp, {
+                        onAction(MainAction.OpenSubscriptionLink(url))
+                    })
+                },
+            ).forEach { (label, icon, action) ->
+                Surface(
+                    onClick = action,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp),
+                    shape = MaterialTheme.shapes.large,
+                    color = colors.primaryContainer.copy(alpha = 0.45f),
+                    contentColor = colors.onSurface,
+                    border = BorderStroke(0.75.dp, colors.primary.copy(alpha = 0.5f)),
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Surface(shape = MaterialTheme.shapes.medium, color = colors.primary.copy(alpha = 0.12f)) {
+                            Icon(painterResource(icon), null, Modifier.padding(8.dp).size(22.dp), tint = colors.primary)
+                        }
+                        Text(stringResource(label), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
+                            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    }
                 }
             }
             drawerItems.forEachIndexed { index, item ->

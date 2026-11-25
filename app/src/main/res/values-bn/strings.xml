@@ -866,4 +866,9 @@
     <string name="aether_wait_cosmos_32">🚀 We are at the controls until the route is ready.</string>
     <string name="aether_action_rebuild_profile">প্রস্তুত করে স্বয়ংক্রিয়ভাবে সংযোগ করুন</string>
     <string name="aether_scan_network">স্ক্যান মোড</string>
+    <string name="usage_earlier">আগের</string>
+    <string name="usage_later">পরের</string>
+    <string name="aether_build_configs">পরীক্ষার কনফিগ তৈরি</string>
+    <string name="aether_build_choose_out_rule">OutRule কনফিগ বেছে নিন</string>
+    <string name="aether_build_no_out_rules">আগে একটি সমর্থিত আউটবাউন্ড কনফিগ যোগ করুন।</string>
 </resources>

@@ -33,6 +33,77 @@ import java.util.concurrent.atomic.AtomicBoolean
 class MainRepository(
     private val app: AngApplication
 ) : MainDataSource {
+    override fun getDiagnosticOutRules(): List<DiagnosticOutRuleChoice> =
+        MmkvManager.decodeAllServerList().mapNotNull { guid ->
+            val profile = MmkvManager.decodeServerConfig(guid) ?: return@mapNotNull null
+            if (getDiagnosticOutRule(guid) != null) DiagnosticOutRuleChoice(guid, profile.remarks) else null
+        }
+
+    override fun getDiagnosticOutRule(guid: String): ProfileItem? {
+        val profile = MmkvManager.decodeServerConfig(guid) ?: return null
+        val outbound = diagnosticOutRule(
+            com.v2ray.ang.dto.entities.ProfileEntry(guid, profile),
+            SettingsManager::findProfileEntryViaRemarks,
+        ) ?: return null
+        if (!com.v2ray.ang.core.AetherExit.takesAsNode(outbound) || outbound.aetherEmbeddedOutrole != null ||
+            outbound.server.isNullOrBlank() || outbound.remarks.isBlank()) return null
+        val valid = runCatching {
+                com.v2ray.ang.core.CoreOutboundBuilder.outroleOutboundOf(
+                    com.v2ray.ang.core.CoreOutboundBuilder.convert(outbound)
+                ) is com.v2ray.ang.core.ExitNodeOutbound.Built
+            }.getOrDefault(false)
+        return outbound.takeIf { valid }
+    }
+
+    override fun saveDiagnosticProfiles(profiles: Map<String, ProfileItem>, ready: List<String>): Boolean {
+        val previous = MmkvManager.decodeSubscription(AETHER_DIAGNOSTIC_GROUP)
+        val group = SubscriptionItem(remarks = getString(R.string.aether_build_configs), autoUpdate = false)
+        if (MmkvManager.tryEncodeSubscription(AETHER_DIAGNOSTIC_GROUP, group) == null) return false
+        return try {
+            MmkvManager.saveServerProfiles(profiles, emptyMap(), AETHER_DIAGNOSTIC_GROUP, append = false)
+            profiles.keys.forEach { MmkvManager.encodeServerTestDelayMillis(it, if (it in ready) 0L else -1L) }
+            true
+        } catch (error: Exception) {
+            if (previous == null) MmkvManager.tryRemoveSubscription(AETHER_DIAGNOSTIC_GROUP)
+            else MmkvManager.tryEncodeSubscription(AETHER_DIAGNOSTIC_GROUP, previous)
+            LogUtil.e(AppConfig.TAG, "Failed to save diagnostic profiles", error)
+            false
+        }
+    }
+
+    override fun converterSubscriptionId(): String {
+        val fixedId = super.converterSubscriptionId()
+        if (MmkvManager.decodeSubscription(fixedId) != null) return fixedId
+        val legacy = MmkvManager.decodeSubscriptions().filter { candidate ->
+            val subscription = candidate.subscription
+            if (subscription.remarks != "my star" || subscription.url.isNotBlank() || subscription.autoUpdate) {
+                return@filter false
+            }
+            val profiles = MmkvManager.decodeServerList(candidate.guid)
+            profiles.isNotEmpty() && profiles.all {
+                MmkvManager.decodeServerConfig(it)?.aetherEmbeddedOutrole != null
+            }
+        }
+        return legacy.singleOrNull()?.guid ?: fixedId
+    }
+
+    override fun saveConverterProfiles(target: String, profiles: Map<String, ProfileItem>): Boolean {
+        if (profiles.isEmpty()) return false
+        val previous = MmkvManager.decodeSubscription(target)
+        val group = SubscriptionItem(remarks = "my star", autoUpdate = false)
+        if (MmkvManager.tryEncodeSubscription(target, group) == null) return false
+        return try {
+            // The profile index prepends each input, so feed it in reverse to preserve source order.
+            val ordered = profiles.entries.toList().asReversed().associate { it.key to it.value }
+            MmkvManager.saveServerProfiles(ordered, emptyMap(), target, append = false)
+            true
+        } catch (error: Exception) {
+            if (previous == null) MmkvManager.tryRemoveSubscription(target)
+            else MmkvManager.tryEncodeSubscription(target, previous)
+            LogUtil.e(AppConfig.TAG, "Failed to save converted subscription", error)
+            false
+        }
+    }
 
     private val localizedContext: Context
         get() = AppLocaleManager.localizedContext(app)
@@ -144,7 +215,8 @@ class MainRepository(
                 }
             )
         }
-        result += MmkvManager.decodeSubscriptions()
+        val star = converterSubscriptionId()
+        result += MmkvManager.decodeSubscriptions().sortedBy { it.guid == star || it.subscription.remarks == "my star" }
         return result
     }
 
@@ -202,18 +274,32 @@ class MainRepository(
             .map(MmkvManager::tryRemoveServer).all { it }
     }
 
-    override fun ensureProSubscription(): String? = MmkvManager.tryEncodeSubscription(
-        AppConfig.PRO_SUBSCRIPTION_ID,
-        MmkvManager.decodeSubscription(AppConfig.PRO_SUBSCRIPTION_ID)?.copy(url = "", autoUpdate = false)
-            ?: SubscriptionItem(remarks = app.getString(R.string.pro_subscription_name), url = "", autoUpdate = false),
+    override fun ensureProSubscription(): String? = ensureProSubscription(AppConfig.PRO_SUBSCRIPTION_ID)
+
+    override fun ensureProSubscription(groupId: String): String? = MmkvManager.tryEncodeSubscription(
+        groupId,
+        (MmkvManager.decodeSubscription(groupId) ?: SubscriptionItem()).copy(
+            remarks = "Andromeda ${com.v2ray.ang.handler.proGroupNumber(groupId)}",
+            url = "",
+            autoUpdate = true,
+            updateInterval = com.v2ray.ang.handler.SubscriptionUpdater.UPDATE_INTERVAL_MINUTES,
+        ),
     )
+
+    override fun rollbackProImport(groupId: String, previousGuids: Set<String>, removeGroup: Boolean): Boolean =
+        if (removeGroup) MmkvManager.tryRemoveSubscription(groupId)
+        else MmkvManager.finalizeManagedImport(groupId, previousGuids, commit = false)
+
+    override fun commitProImport(groupId: String, previousGuids: Set<String>): Boolean =
+        MmkvManager.finalizeManagedImport(groupId, previousGuids, commit = true)
 
     override fun finalizeFreeImport(previous: Set<String>, commit: Boolean): Boolean =
         MmkvManager.finalizeFreeImport(previous, commit)
 
     override fun ensureFreeSubscription(): String? = MmkvManager.tryEncodeSubscription(
         AppConfig.ANDROMEDA_SUBSCRIPTION_ID,
-        SubscriptionItem(remarks = app.getString(R.string.andromeda_subscription_name), url = "", autoUpdate = false),
+        SubscriptionItem(remarks = app.getString(R.string.andromeda_subscription_name), url = "", autoUpdate = true,
+            updateInterval = com.v2ray.ang.handler.SubscriptionUpdater.UPDATE_INTERVAL_MINUTES),
     )
 
     override suspend fun importFreeProfiles(content: String, subscriptionId: String): Int =

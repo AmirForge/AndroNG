@@ -534,7 +534,7 @@ class QuickAetherProfileTest {
         })
         val started = testScheduler.currentTime
         assertEquals(2, refresh.refreshAll(listOf("a", "b")) {}.guids.size)
-        assertEquals(90_000L, testScheduler.currentTime - started)
+        assertEquals(15_000L, testScheduler.currentTime - started)
         assertEquals(1, writes)
         verifyNoInteractions(keys)
     }

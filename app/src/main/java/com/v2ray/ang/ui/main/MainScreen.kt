@@ -6,6 +6,14 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.TextButton
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -88,6 +96,10 @@ fun MainScreen(
     onNavigate: (MainDestination) -> Unit,
 ) {
     val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
+    uiState.converter?.let { converter ->
+        ConfigConverterScreen(converter, uiState, onAction)
+        return
+    }
     val groups = uiState.groups
     val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
     val isRunning = uiState.isRunning
@@ -101,6 +113,23 @@ fun MainScreen(
     }
     val showConnectionAnimation = connectTapped || isRunning || isConnecting
     val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner, uiState.selectedGroupId) {
+        val group = uiState.selectedGroupId
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                mainViewModel.refreshHeaderSubscriptionStatus(group)
+                delay(45_000L)
+            }
+        }
+    }
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                delay(60_000L)
+                onAction(MainAction.RefreshControlPanel)
+            }
+        }
+    }
     LaunchedEffect(uiState.aetherConnectionRequest, lifecycleOwner) {
         uiState.aetherConnectionRequest?.let { guid ->
             lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -144,6 +173,7 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var showScanModes by rememberSaveable { mutableStateOf(false) }
     var showDelAllConfirm by remember { mutableStateOf(false) }
     var showDelDuplicateConfirm by remember { mutableStateOf(false) }
     var showDelInvalidConfirm by remember { mutableStateOf(false) }
@@ -230,6 +260,35 @@ fun MainScreen(
     }
 
     if (uiState.andromedaOpen) AndromedaEasterEgg(onDismiss = { onAction(MainAction.DismissAndromeda) })
+    if (showScanModes) {
+        val labels = androidx.compose.ui.res.stringArrayResource(R.array.aether_scan_entries)
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showScanModes = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+            title = { Text(stringResource(R.string.aether_lab_scan_mode), style = MaterialTheme.typography.titleMedium) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    com.v2ray.ang.enums.AetherScanMode.entries.forEachIndexed { index, mode ->
+                        ConfigChoiceCard(
+                            onClick = {
+                                showScanModes = false
+                                onAction(MainAction.ScanAllAetherEndpoints(mode))
+                            },
+                            title = labels[index],
+                            icon = R.drawable.ic_refresh_24dp,
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { showScanModes = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            },
+        )
+    }
+
     if (uiState.pendingExternalImport != null) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { onAction(MainAction.DismissExternalImport) },
@@ -248,18 +307,23 @@ fun MainScreen(
         )
     }
     if (uiState.proDialog) ProCodeDialog(uiState, onAction)
+    if (uiState.usageOpen) UsageReportDialog(uiState, onAction)
+    if (uiState.diagnosticDialog) DiagnosticOutRuleDialog(uiState, onAction)
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             MainDrawerContent(
                 drawerState = drawerState,
+                tutorialsUrl = uiState.controlPanel.tutorialsUrl,
                 onNavigate = { route ->
                     scope.launch { drawerState.close() }
                     onNavigate(route)
                 },
                 onAction = { action ->
-                    if (action == MainAction.OpenProSubscription) scope.launch { drawerState.close() }
+                    if (action == MainAction.OpenProSubscription || action == MainAction.OpenUsageReport ||
+                        action == MainAction.BuildDiagnosticConfigs || action is MainAction.OpenSubscriptionLink
+                    ) scope.launch { drawerState.close() }
                     onAction(action)
                 },
             )
@@ -279,10 +343,16 @@ fun MainScreen(
                     center = Offset(size.width * 0.82f, size.height),
                     radius = (radius * 0.78f).coerceAtLeast(1f),
                 )
+                val roseLight = Brush.radialGradient(
+                    listOf(colors.primary.copy(alpha = .19f), Color.Transparent),
+                    center = Offset(size.width * .38f, size.height * .30f),
+                    radius = (size.width * .46f).coerceAtLeast(1f),
+                )
                 onDrawBehind {
                     drawRect(colors.background)
                     drawRect(headerLight)
                     drawRect(dockLight)
+                    drawRect(roseLight)
                 }
             },
             containerColor = Color.Transparent,
@@ -307,7 +377,9 @@ fun MainScreen(
                     },
                     onSearchToggle = { show: Boolean -> showSearch = show },
                     onMenuClick = { scope.launch { drawerState.open() } },
-                    onAction = onAction,
+                    onAction = { action ->
+                        if (action == MainAction.RefreshAllAetherEndpoints) showScanModes = true else onAction(action)
+                    },
                     onMoreMenuAction = { action ->
                         when (action) {
                             MainMoreMenuAction.RestartService -> onAction(MainAction.RestartService)
@@ -317,7 +389,6 @@ fun MainScreen(
                             MainMoreMenuAction.ExportAll -> onAction(MainAction.ExportAll)
                             MainMoreMenuAction.LocateSelected -> onAction(MainAction.LocateSelectedServer)
                             MainMoreMenuAction.SortByTestResults -> onAction(MainAction.SortByTestResults)
-                            MainMoreMenuAction.TestAll -> onAction(MainAction.TestAllServers)
                             MainMoreMenuAction.TestAllRealPing -> onAction(MainAction.TestRealAllServers)
                             MainMoreMenuAction.UpdateSubscriptions -> onAction(MainAction.UpdateSubscriptions)
                         }
@@ -345,10 +416,26 @@ fun MainScreen(
                         )
                 ) {
                     if (!showSearch) {
+                        val usage = uiState.liveSubscriptionStatus[uiState.selectedGroupId]
+                            ?: groups.firstOrNull { it.id == uiState.selectedGroupId }?.usageInfo
+                        var expired by remember(usage?.expire) {
+                            mutableStateOf(usage?.let { buildSubscriptionInfoUiModel(it, System.currentTimeMillis()).expired } == true)
+                        }
+                        LaunchedEffect(usage?.expire) {
+                            val expiry = usage?.expire?.takeIf { it > 0 } ?: return@LaunchedEffect
+                            while (!expired) {
+                                val remaining = expiry - System.currentTimeMillis() / 1000
+                                if (remaining <= 0) expired = true
+                                else delay(remaining.coerceAtMost(60) * 1000)
+                            }
+                        }
                         HomeHeader(
+                            expired = expired || (usage != null && usage.total > 0L && usage.used >= usage.total),
+                            updateUrl = uiState.headerUpdateUrl,
                             animateGalaxy = showConnectionAnimation,
                             importing = isLoading || uiState.isCreatingAether,
-                            energised = uiState.rebuildingAether,
+                            energised = uiState.rebuildingAether || (uiState.isRunning && uiState.status == MainStatus.Testing && uiState.testProgress == null),
+                            selectedGroupId = uiState.selectedGroupId,
                             onAction = onAction,
                         )
                         uiState.controlPanel.banner?.let { banner ->
@@ -387,6 +474,7 @@ fun MainScreen(
                         GroupPagerPage(
                             groupId = group.id,
                             starredTestGuids = uiState.starredTestGuids[group.id].orEmpty(),
+                            endpointRefreshResults = uiState.endpointRefreshResults,
                             mainViewModel = mainViewModel,
                             selectedGuid = selectedGuid,
                             isPreparingAether = uiState.isCreatingAether || isLoading,
@@ -469,9 +557,12 @@ internal suspend fun pulseAetherRefreshHaptics(onPulse: () -> Unit) {
 
 @Composable
 private fun HomeHeader(
+    expired: Boolean,
+    updateUrl: String?,
     animateGalaxy: Boolean,
     importing: Boolean,
     energised: Boolean,
+    selectedGroupId: String,
     onAction: (MainAction) -> Unit,
 ) {
     val compactHeight = LocalConfiguration.current.screenHeightDp < 480
@@ -498,29 +589,65 @@ private fun HomeHeader(
                     )
                 }
             }
-            ConnectionGalaxy(
-                animated = animateGalaxy,
-                energised = energised,
-                modifier = Modifier.weight(1.7f).fillMaxHeight()
-                    .offset(x = 6.dp, y = if (compactHeight) (-4).dp else (-10).dp)
-                    .semantics { contentDescription = galaxyActionLabel }
-                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null,
-                        role = Role.Button, onClickLabel = galaxyActionLabel) { onAction(MainAction.GalaxyTapped) },
-            )
+            val artwork = Modifier.weight(1.7f).fillMaxHeight()
+                .offset(x = 6.dp, y = if (compactHeight) (-4).dp else (-10).dp)
+                .semantics { contentDescription = galaxyActionLabel }
+                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null,
+                    role = Role.Button, onClickLabel = galaxyActionLabel) { onAction(MainAction.GalaxyTapped) }
+            var displayedExpired by remember { mutableStateOf(expired) }
+            val artworkScale = remember { Animatable(1f) }
+            LaunchedEffect(expired) {
+                if (displayedExpired != expired) {
+                    artworkScale.animateTo(.035f, tween(170, easing = FastOutSlowInEasing))
+                    displayedExpired = expired
+                }
+                artworkScale.animateTo(1f, tween(340, easing = FastOutSlowInEasing))
+            }
+            Box(artwork) {
+                val scaledArtwork = Modifier.fillMaxSize().graphicsLayer {
+                    scaleX = artworkScale.value
+                    scaleY = artworkScale.value
+                }
+                if (displayedExpired) ExpiredSubscriptionPlanet(scaledArtwork)
+                else ConnectionGalaxy(animated = animateGalaxy, energised = energised, modifier = scaledArtwork)
+            }
         }
+        val freeConfigurationPage = isFreeConfigurationPage(selectedGroupId)
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             HomeShortcut(
                 title = stringResource(R.string.menu_item_import_config_clipboard),
                 icon = R.drawable.ic_copy,
             ) { onAction(MainAction.ImportClipboard) }
-            HomeShortcut(
-                title = stringResource(R.string.control_panel_free_config),
-                icon = R.drawable.ic_cloud_download_24dp,
-                enabled = !importing,
-            ) { onAction(MainAction.ImportFreeConfiguration) }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            val label = when {
+                freeConfigurationPage -> R.string.control_panel_free_config
+                expired -> R.string.subscription_expired_header
+                else -> R.string.home_update_list
+            }
+            AndroLiquidShortcut(label = label, enabled = !importing && !expired) {
+                onAction(if (freeConfigurationPage) MainAction.ImportFreeConfiguration else MainAction.UpdateGroupSubscription(selectedGroupId))
+            }
+            if (updateUrl != null) {
+                val updateDescription = stringResource(R.string.andro_header_update)
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = { onAction(MainAction.OpenSubscriptionLink(updateUrl)) },
+                    modifier = Modifier.size(52.dp),
+                    contentPadding = PaddingValues(0.dp)) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_nova_update),
+                        contentDescription = updateDescription,
+                        modifier = Modifier.size(36.dp),
+                        tint = Color.Unspecified,
+                    )
+                }
+            }
+            }
         }
     }
 }
+
+internal fun isFreeConfigurationPage(groupId: String): Boolean =
+    groupId.isEmpty() || groupId == com.v2ray.ang.AppConfig.DEFAULT_SUBSCRIPTION_ID
 
 @Composable
 private fun HomeShortcut(title: String, icon: Int, enabled: Boolean = true, onClick: () -> Unit) {
@@ -532,6 +659,7 @@ private fun HomeShortcut(title: String, icon: Int, enabled: Boolean = true, onCl
         color = colors.surfaceContainerHigh,
         contentColor = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = 0.38f),
         border = BorderStroke(0.75.dp, colors.primary.copy(alpha = 0.58f)),
+        modifier = Modifier.animateContentSize(tween(320)),
     ) {
         Row(
             modifier = Modifier.heightIn(min = 48.dp).padding(horizontal = 14.dp),

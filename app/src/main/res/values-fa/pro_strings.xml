@@ -11,5 +11,6 @@
     <string name="pro_cooldown">%1$d دقیقهٔ دیگر دوباره تلاش کن.</string>
     <string name="pro_activate">فعال‌سازی</string>
     <string name="stop_preparation">توقف عملیات جاری</string>
-    <string name="pro_buy_code">buy pro code</string>
+    <string name="pro_buy_code">خرید کد پرو</string>
+    <string name="pro_activate_via_vpn">فعال‌سازی با VPN</string>
 </resources>

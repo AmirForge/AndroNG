@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.entities.SubscriptionItem
 import com.v2ray.ang.extension.toLongEx
@@ -144,9 +145,6 @@ fun SubEditScreen(
     var overrideAddress by rememberSaveable { mutableStateOf(initial.overrideAddress ?: "") }
     var overridePort by rememberSaveable { mutableStateOf(initial.overridePort?.toString() ?: "") }
     var enabled by rememberSaveable { mutableStateOf(initial.enabled) }
-    var autoUpdate by rememberSaveable { mutableStateOf(initial.autoUpdate) }
-    var updateInterval by rememberSaveable { mutableStateOf(initial.updateInterval.toString()) }
-    var isUpdateIntervalError by rememberSaveable { mutableStateOf(false) }
     var allowInsecureUrl by rememberSaveable { mutableStateOf(initial.allowInsecureUrl) }
     var prevProfile by rememberSaveable { mutableStateOf(initial.prevProfile ?: "") }
     var nextProfile by rememberSaveable { mutableStateOf(initial.nextProfile ?: "") }
@@ -172,8 +170,6 @@ fun SubEditScreen(
         val newRequestHeaders = requestHeaders
         val newFilter = filter
         val newEnabled = enabled
-        val newAutoUpdate = autoUpdate
-        val newUpdateInterval = updateInterval.toLongEx()
         val newPrevProfile = prevProfile
         val newNextProfile = nextProfile
         val newAllowInsecureUrl = allowInsecureUrl
@@ -185,8 +181,8 @@ fun SubEditScreen(
             subItem.requestHeaders = newRequestHeaders
             subItem.filter = newFilter
             subItem.enabled = newEnabled
-            subItem.autoUpdate = newAutoUpdate
-            subItem.updateInterval = newUpdateInterval
+            subItem.autoUpdate = true
+            subItem.updateInterval = SubscriptionUpdater.UPDATE_INTERVAL_MINUTES
             subItem.prevProfile = newPrevProfile
             subItem.nextProfile = newNextProfile
             subItem.allowInsecureUrl = newAllowInsecureUrl
@@ -214,13 +210,11 @@ fun SubEditScreen(
                         val urlErr = url.isNotEmpty() && (
                             !Utils.isValidUrl(url) || (!Utils.isValidSubUrl(url) && !allowInsecureUrl)
                         )
-                        val intervalErr = autoUpdate && updateInterval.toLongEx() < AppConfig.SUBSCRIPTION_MIN_INTERVAL_MINUTES
 
                         isRemarksError = remarksErr
                         isUrlError = urlErr
-                        isUpdateIntervalError = intervalErr
 
-                        val hasError = remarksErr || urlErr || intervalErr
+                        val hasError = remarksErr || urlErr
                         if (!hasError) {
                             edits()?.let(onSave)
                         }
@@ -277,19 +271,10 @@ fun SubEditScreen(
                 onCheckedChange = { enabled = it }
             )
 
-            SettingsSwitchItem(
-                title = stringResource(R.string.sub_auto_update),
-                checked = autoUpdate,
-                onCheckedChange = { autoUpdate = it }
-            )
-
-            FormTextField(
-                label = stringResource(R.string.title_pref_auto_update_interval),
-                value = updateInterval,
-                onValueChange = { updateInterval = it },
-                keyboardType = KeyboardType.Number,
-                isError = isUpdateIntervalError,
-                supportingText = if (isUpdateIntervalError) stringResource(R.string.toast_invalid_update_interval) else null
+            Text(
+                text = stringResource(R.string.sub_update_every_five_hours),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 10.dp),
             )
 
             SettingsSwitchItem(

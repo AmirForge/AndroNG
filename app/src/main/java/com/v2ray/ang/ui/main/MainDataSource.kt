@@ -33,6 +33,10 @@ interface MainDataSource : Closeable {
     fun rollbackProImport(previousGuids: Set<String>, removeGroup: Boolean): Boolean = false
 
     fun ensureProSubscription(): String? = null
+    fun ensureProSubscription(groupId: String): String? = ensureProSubscription()
+    fun rollbackProImport(groupId: String, previousGuids: Set<String>, removeGroup: Boolean): Boolean =
+        rollbackProImport(previousGuids, removeGroup)
+    fun commitProImport(groupId: String, previousGuids: Set<String>): Boolean = previousGuids.isEmpty()
 
     fun finalizeFreeImport(previous: Set<String>, commit: Boolean): Boolean = false
 
@@ -85,4 +89,11 @@ interface MainDataSource : Closeable {
 
     fun syncSubscriptions()
     fun initAssets()
+    fun saveDiagnosticProfiles(profiles: Map<String, ProfileItem>, ready: List<String>): Boolean = false
+    fun saveConverterProfiles(target: String, profiles: Map<String, ProfileItem>): Boolean = false
+    fun converterSubscriptionId(): String = "_andromeda_my_star"
+    fun getDiagnosticOutRules(): List<DiagnosticOutRuleChoice> = emptyList()
+    fun getDiagnosticOutRule(guid: String): ProfileItem? = decodeServerConfig(guid)?.takeUnless {
+        it.configType == com.v2ray.ang.enums.EConfigType.AETHER
+    }
 }

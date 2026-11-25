@@ -32,8 +32,6 @@ import com.v2ray.ang.ui.server.AetherKeysSource
 import com.v2ray.ang.ui.server.ProfileEditorRepository
 import com.v2ray.ang.ui.server.ProfileEditorSource
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
@@ -43,6 +41,7 @@ import com.v2ray.ang.AppConfig
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.withLock
 
 class QuickAetherProfile internal constructor(
     private val keys: AetherKeysSource,
@@ -58,15 +57,15 @@ class QuickAetherProfile internal constructor(
     private val prepareScanNetwork: suspend () -> Boolean = { true },
     private val storeBatchRefreshed: (Map<String, Pair<ProfileItem, ProfileItem>>) -> Boolean = MmkvManager::updateAetherEndpoints,
 ) {
-    constructor(context: Context) : this(
+    constructor(context: Context, allowVpnDisconnect: Boolean = true) : this(
         AetherKeysRepository(context),
         AetherEditorRepository(context),
         ProfileEditorRepository(),
-        prepareScanNetwork = { AetherScanner.prepareNetwork(context) },
+        prepareScanNetwork = { AetherScanner.prepareNetwork(context, allowVpnDisconnect) },
     )
 
     companion object {
-        internal const val GLOBAL_SCAN_TIMEOUT_MS = 90_000L
+        internal const val GLOBAL_SCAN_TIMEOUT_MS = AetherScanner.SCAN_TIMEOUT_MS
         internal fun canRefresh(profile: ProfileItem): Boolean =
             profile.configType == EConfigType.AETHER &&
                 profile.aetherCommand.isNullOrBlank() &&
@@ -123,6 +122,23 @@ class QuickAetherProfile internal constructor(
     }
 
     internal data class ImportResult(val count: Int, @StringRes val error: Int? = null)
+
+    internal suspend fun prepareConverterProfile(template: ProfileItem): ProfileItem? {
+        if (!prepareScanNetwork()) return null
+        val kind = keyKindFor(template) ?: return null
+        if (renewKeys(kind) != null) {
+            LogUtil.w(AppConfig.TAG, "Converter key renewal failed for ${template.remarks}")
+            return null
+        }
+        val profile = template.copy(aetherEndpointCount = 5, aetherScanMode = AetherScanMode.IRONCLAD.type)
+        val result = editor.scanForConverter(profile)
+        if (result == null) {
+            LogUtil.w(AppConfig.TAG, "Converter endpoint scan found no result for ${template.remarks}")
+            return null
+        }
+        applyScan(profile, result)
+        return profile
+    }
 
     internal suspend fun importLinks(lines: List<String>, onProgress: (Int) -> Unit): ImportResult =
         importLinks(lines, null, onProgress)
@@ -214,55 +230,82 @@ class QuickAetherProfile internal constructor(
         return null
     }
 
-    internal data class RefreshResult(val guids: List<String>, @StringRes val error: Int? = null)
+    internal data class RefreshResult(val guids: List<String>, @StringRes val error: Int? = null, val failedGuids: List<String> = emptyList())
 
     internal suspend fun needsKeys(guid: String): Boolean {
         val profile = withContext(Dispatchers.IO) { profiles.loadProfile(guid) } ?: return false
         return canRefresh(profile) && editor.missingKeys(requiredKeys(profile)).isNotEmpty()
     }
 
-    /** One common Turbo pool per protocol; every pool is cancelled after ninety seconds. */
-    internal suspend fun refreshAll(guids: List<String>, onProgress: (Int) -> Unit): RefreshResult = coroutineScope {
+    internal suspend fun refreshAll(guids: List<String>, onProgress: (Int) -> Unit): RefreshResult =
+        refreshAll(guids, AetherScanMode.BALANCED, onProgress)
+
+    /** Each protocol shares one scan pool and the scanner's deadline. */
+    internal suspend fun refreshAll(guids: List<String>, mode: AetherScanMode, onProgress: (Int) -> Unit): RefreshResult = coroutineScope {
         val originals = withContext(Dispatchers.IO) {
             guids.distinct().mapNotNull { guid -> profiles.loadProfile(guid)?.takeIf(::canRefresh)?.let { guid to it } }.toMap()
         }
         if (originals.isEmpty()) return@coroutineScope RefreshResult(emptyList(), R.string.aether_refresh_none)
         if (!prepareScanNetwork()) return@coroutineScope RefreshResult(emptyList(), R.string.aether_scan_disconnect_vpn)
         onProgress(R.string.aether_import_progress_working)
-        val groups = originals.entries.groupBy { AetherProtocol.fromString(it.value.aetherProtocol) }
-        val outcomes = groups.map { (protocol, members) -> async {
-            val template = commonScanProfile(protocol, members.maxOf { AetherScanner.endpointCount(it.value) })
-            val result = try {
-                if (editor.missingKeys(requiredKeys(template)).isNotEmpty()) null
-                else boundedScan(template, networkPrepared = true).first
-            } catch (cancelled: CancellationException) { throw cancelled }
-            catch (error: Exception) {
-                LogUtil.e(AppConfig.TAG, "Aether global scan failed protocol=${protocol.type}", error)
-                null
-            }
-            protocol to result
-        } }.awaitAll().toMap()
-        currentCoroutineContext().ensureActive()
-        val updates = linkedMapOf<String, Pair<ProfileItem, ProfileItem>>()
-        originals.forEach { (guid, original) ->
-            val protocol = AetherProtocol.fromString(original.aetherProtocol)
-            val result = outcomes[protocol] ?: return@forEach
-            val normalized = commonScanProfile(protocol, AetherScanner.endpointCount(original))
-            val updated = original.copy(aetherScanMode = normalized.aetherScanMode,
-                aetherIpVersion = normalized.aetherIpVersion, aetherScanNetwork = normalized.aetherScanNetwork)
-            applyScan(updated, result)
-            updates[guid] = original to updated
+        val groups = originals.entries.groupBy { referenceKey(it.value) }
+        val session = editor.activeSession()
+        val references = aetherReferenceProfiles.mapNotNull { reference ->
+            val members = groups[referenceKey(reference)] ?: return@mapNotNull null
+            val diagnostic = members.all { it.value.subscriptionId == AETHER_DIAGNOSTIC_GROUP }
+            val template = reference.copy(
+                subscriptionId = if (diagnostic) AETHER_DIAGNOSTIC_GROUP else reference.subscriptionId,
+                aetherScanMode = mode.type,
+                aetherEndpointCount = when {
+                    diagnostic -> 1
+                    mode == AetherScanMode.TURBO -> 5
+                    else -> members.maxOf { AetherScanner.endpointCount(it.value) }
+                },
+            )
+            val protocol = AetherProtocol.fromString(template.aetherProtocol)
+            if (session?.disturbedByScanOf(protocol) == true ||
+                editor.missingKeys(requiredKeys(template)).isNotEmpty()) return@mapNotNull null
+            template to members
         }
-        if (updates.isEmpty()) return@coroutineScope RefreshResult(emptyList(), R.string.aether_scan_failed)
-        onProgress(R.string.aether_progress_saving)
-        val saved = withContext(Dispatchers.IO) { storeBatchRefreshed(updates) }
-        if (!saved) return@coroutineScope RefreshResult(emptyList(), R.string.toast_failure)
-        RefreshResult(updates.keys.toList(), R.string.aether_scan_failed.takeIf { outcomes.values.any { it == null } })
+        val saved = linkedSetOf<String>()
+        val writeLock = kotlinx.coroutines.sync.Mutex()
+        var writeFailed = false
+        editor.scanReferences(references.map { it.first }) { index, result ->
+            if (result != null) writeLock.withLock {
+                val members = references[index].second
+                val updates = members.associate { (guid, original) ->
+                    val updated = original.copy(
+                        aetherEndpointCount = when {
+                            original.subscriptionId == AETHER_DIAGNOSTIC_GROUP -> 1
+                            mode == AetherScanMode.TURBO -> 5
+                            else -> original.aetherEndpointCount
+                        },
+                    )
+                    applyScan(updated, result)
+                    guid to (original to updated)
+                }
+                if (withContext(Dispatchers.IO) { storeBatchRefreshed(updates) }) saved.addAll(updates.keys)
+                else writeFailed = true
+            }
+        }
+        val failed = originals.keys - saved
+        RefreshResult(saved.toList(), when {
+            writeFailed -> R.string.toast_failure
+            failed.isNotEmpty() -> R.string.aether_scan_failed
+            else -> null
+        }, failed.toList())
     }
 
-    internal fun commonScanProfile(protocol: AetherProtocol, count: Int): ProfileItem =
+    private fun referenceKey(profile: ProfileItem): Pair<AetherProtocol, AetherTransport> {
+        val protocol = AetherProtocol.fromString(profile.aetherProtocol)
+        val transport = if (protocol.overMasque) AetherTransport.fromString(profile.aetherTransport)
+            else AetherTransport.HTTP3
+        return protocol to transport
+    }
+
+    internal fun commonScanProfile(protocol: AetherProtocol, count: Int, mode: AetherScanMode = AetherScanMode.TURBO): ProfileItem =
         ProfileItem.create(EConfigType.AETHER).copy(
-            aetherProtocol = protocol.type, aetherScanMode = AetherScanMode.TURBO.type,
+            aetherProtocol = protocol.type, aetherScanMode = mode.type,
             aetherIpVersion = AetherIpVersion.DUAL.type, aetherEndpointCount = count,
             aetherScanNetwork = if (protocol.overMasque) AetherScanNetwork.BOTH.type else AetherScanNetwork.UDP.type,
             aetherTransport = if (protocol.overMasque) AetherTransport.HTTP2.type else AetherTransport.HTTP3.type,

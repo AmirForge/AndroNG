@@ -16,7 +16,8 @@ class TProxyService(
     private val context: Context,
     private val vpnInterface: ParcelFileDescriptor,
     private val isRunningProvider: () -> Boolean,
-    private val restartCallback: () -> Unit
+    private val restartCallback: () -> Unit,
+    private val configOverride: String? = null,
 ) : Tun2SocksControl {
     companion object {
         @JvmStatic
@@ -61,7 +62,7 @@ class TProxyService(
             val configFile = File(context.filesDir, "hev-socks5-tunnel.yaml").apply {
                 writeText(configContent)
             }
-            LogUtil.d(AppConfig.TAG, "HevSocks5Tunnel Config content:\n$configContent")
+            LogUtil.d(AppConfig.TAG, "HevSocks5Tunnel configuration prepared")
 
             // False when the native thread could not be created, or when one is still running.
             TProxyStartService(configFile.absolutePath, vpnInterface.fd)
@@ -87,6 +88,7 @@ class TProxyService(
     }
 
     private fun buildConfig(): String {
+        configOverride?.let { return it }
         val socksPort = SettingsManager.getSocksPort()
         val socksUsername = SettingsManager.getSocksUsername()
         val socksPassword = SettingsManager.getSocksPassword()

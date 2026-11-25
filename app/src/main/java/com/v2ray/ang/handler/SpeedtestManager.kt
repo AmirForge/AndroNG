@@ -25,12 +25,16 @@ object SpeedtestManager {
      * @param port The port to connect to.
      * @return The connection time in milliseconds, or -1 if the connection failed.
      */
-    fun socketConnectTime(url: String, port: Int, timeoutMs: Int = 1500): Long {
+    fun socketConnectTime(url: String, port: Int, timeoutMs: Int = 1500, localPort: Int? = null): Long {
         var socket: Socket? = null
         val start = System.currentTimeMillis()
 
         try {
             socket = Socket()
+            if (localPort != null) {
+                socket.reuseAddress = true
+                socket.bind(InetSocketAddress(localPort))
+            }
             socket.connect(InetSocketAddress(url, port), timeoutMs)
 
             return System.currentTimeMillis() - start

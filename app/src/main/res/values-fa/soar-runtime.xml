@@ -1,0 +1,36 @@
+<resources>
+    <string name="soar_runtime_mtu">MTU تونل VPN</string>
+    <string name="soar_runtime_mtu_hint">اندازهٔ بستهٔ رابط VPN؛ مستقل از اندازهٔ بسته‌های DNS</string>
+    <string name="soar_vpn_mtu">MTU تونل · ۱۲۸۰ تا ۹۰۰۰</string>
+    <string name="soar_tuning">تنظیمات Tuning</string>
+    <string name="soar_tuning_hint">تلاش مجدد، پردازشگرها، بافر و مهلت‌ها</string>
+    <string name="soar_resolver_retries">تلاش هر ریزالور · ۱ تا ۱۰</string>
+    <string name="soar_resolver_timeout">مهلت ریزالور (میلی‌ثانیه) · ۵۰۰ تا ۳۰۰۰۰</string>
+    <string name="soar_retry_delay">فاصلهٔ تلاش‌ها (میلی‌ثانیه) · ۰ تا ۱۰۰۰۰</string>
+    <string name="soar_https_retries">تلاش تست HTTPS · ۱ تا ۱۰</string>
+    <string name="soar_https_timeout">مهلت HTTPS (میلی‌ثانیه) · ۱۰۰۰ تا ۳۰۰۰۰</string>
+    <string name="soar_process_workers">پردازشگرهای هم‌زمان · ۱ تا ۱۶</string>
+    <string name="soar_local_connections">حداکثر اتصال محلی · ۸ تا ۲۵۶</string>
+    <string name="soar_copy_buffer">بافر انتقال (کیبی‌بایت) · ۴ تا ۲۵۶</string>
+    <string name="soar_tcp_timeout">مهلت بیکاری TCP (ثانیه) · ۱۵ تا ۳۶۰۰</string>
+    <string name="soar_udp_timeout">مهلت نشست DNS (ثانیه) · ۵ تا ۶۰۰</string>
+    <string name="soar_local_proxy">پراکسی محلی</string>
+    <string name="soar_local_proxy_hint">SOCKS5، HTTP و احراز هویت</string>
+    <string name="soar_listen_ip">IP محلی · فقط loopback</string>
+    <string name="soar_listen_port">پورت SOCKS5 · ۱۰۲۴ تا ۶۵۵۳۵</string>
+    <string name="soar_http_proxy">پراکسی HTTP</string>
+    <string name="soar_http_port">پورت HTTP · ۱۰۲۴ تا ۶۵۵۳۵</string>
+    <string name="soar_authentication">احراز هویت SOCKS5 و HTTP</string>
+    <string name="soar_username">نام کاربری</string>
+    <string name="soar_password">رمز عبور</string>
+    <string name="soar_reliability">پایداری اتصال</string>
+    <string name="soar_reliability_hint">بررسی سلامت مسیر و گرم‌کردن اتصال</string>
+    <string name="soar_watchdog">فاصلهٔ بررسی سلامت (ثانیه) · ۰ یعنی خاموش</string>
+    <string name="soar_warmup">گرم‌کردن اتصال</string>
+    <string name="soar_warmup_count">تعداد درخواست آماده‌سازی · ۱ تا ۱۶</string>
+    <string name="soar_log_level">سطح گزارش‌ها</string>
+    <string name="soar_other_engines">تنظیمات موتورهای دیگر</string>
+    <string name="soar_other_engines_hint">تفاوت گزینه‌های موتورهای DNS</string>
+    <string name="soar_other_engines_detail">بازهٔ MTU آپلود و دانلود، هم‌زمانی تست MTU، فشرده‌سازی LZ4، تکرار بسته‌ها، Base Encode، صف‌های RX/TX و روش‌های بالانس مربوط به موتورهای Master/Storm/Cotten هستند. Soar اندازهٔ بسته و بالانس مسیر را در موتور خودش مدیریت می‌کند. گزینه‌های قابل تنظیم آن در بخش‌های بسته‌های DNS، کشف مسیر و ظرفیت اتصال آمده‌اند.</string>
+    <string name="soar_resolver_workers">تست هم‌زمان ریزالورها · ۱ تا ۱۶</string>
+</resources>

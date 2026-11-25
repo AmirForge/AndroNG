@@ -3,6 +3,7 @@ package com.v2ray.ang.ui.main
 import android.app.Application
 import android.graphics.Bitmap
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.R
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import com.v2ray.ang.dto.ConnectionTestResult
@@ -55,6 +56,13 @@ class MainViewModelServersChangedTest {
      * stored, recorded in [moves], at once or, held by [hold], once [release] lets it, or refused, see [refusals].
      */
     private class FakeSource : MainDataSource {
+        var diagnosticChoices = emptyList<DiagnosticOutRuleChoice>()
+        var diagnosticSaved: Map<String, ProfileItem>? = null
+        override fun getDiagnosticOutRules() = diagnosticChoices
+        override fun saveDiagnosticProfiles(profiles: Map<String, ProfileItem>, ready: List<String>): Boolean {
+            diagnosticSaved = profiles
+            return true
+        }
         var freeGroupCreated = false
         val freeFinalizations = mutableListOf<Boolean>()
         var freeFinalizeHook: ((Boolean) -> Unit)? = null
@@ -119,7 +127,12 @@ class MainViewModelServersChangedTest {
         override fun getDoubleColumnDisplay() = false
         override fun isGroupAllDisplayEnabled() = showAllGroup
         override fun getString(resId: Int) = ""
-        override fun getString(resId: Int, vararg formatArgs: Any) = ""
+        override fun getString(resId: Int, vararg formatArgs: Any) = when (resId) {
+            R.string.server_test_delay_value -> "${formatArgs.single()} ms"
+            R.string.connection_test_available -> "Connection succeeded in ${formatArgs.single()}"
+            R.string.connection_test_error -> "Connection test failed: ${formatArgs.single()}"
+            else -> ""
+        }
         override fun getStringArray(resId: Int) = emptyList<String>()
         override fun getSubscriptions() = buildList {
             if (showAllGroup) add(SubscriptionCache("", SubscriptionItem(remarks = "All")))
@@ -214,6 +227,41 @@ class MainViewModelServersChangedTest {
     }
 
     @Test
+    fun diagnosticBuildWaitsForAValidOutRuleSelectionAndCreatesAllEightWithoutTesting() = runBlocking {
+        val source = FakeSource()
+        source.diagnosticChoices = listOf(DiagnosticOutRuleChoice("a", "Outbound"))
+        val viewModel = MainViewModel(mock<Application>(), source)
+        viewModel.awaitServers("a", "b")
+        viewModel.onAction(MainAction.BuildDiagnosticConfigs)
+        withTimeout(5_000) { viewModel.uiState.first { it.diagnosticDialog && !it.diagnosticLoading } }
+        assertNull(source.diagnosticSaved)
+        viewModel.onAction(MainAction.BuildDiagnosticConfigsWithOutRule("missing"))
+        assertTrue(viewModel.uiState.value.diagnosticDialog)
+        assertNull(source.diagnosticSaved)
+        viewModel.onAction(MainAction.BuildDiagnosticConfigsWithOutRule("a"))
+        withTimeout(5_000) {
+            while (source.diagnosticSaved == null || viewModel.uiState.value.isCreatingAether) delay(20)
+        }
+        assertEquals(8, source.diagnosticSaved!!.size)
+        assertTrue(source.diagnosticSaved!!.values.all { it.aetherEmbeddedOutrole?.remarks == "a" })
+        assertFalse(viewModel.uiState.value.isTesting)
+        assertTrue(source.currentTests.isEmpty())
+    }
+
+    @Test
+    fun emptyDiagnosticChoicesCanBeDismissedWithoutCreatingProfiles() = runBlocking {
+        val source = FakeSource()
+        val viewModel = MainViewModel(mock<Application>(), source)
+        viewModel.awaitServers("a", "b")
+        viewModel.onAction(MainAction.BuildDiagnosticConfigs)
+        withTimeout(5_000) { viewModel.uiState.first { it.diagnosticDialog && !it.diagnosticLoading } }
+        assertTrue(viewModel.uiState.value.diagnosticOutRules.isEmpty())
+        viewModel.onAction(MainAction.DismissDiagnosticConfigs)
+        assertFalse(viewModel.uiState.value.diagnosticDialog)
+        assertNull(source.diagnosticSaved)
+    }
+
+    @Test
     fun serversChangedAwayFromTheScreenReloadTheirTab() = runBlocking {
         val source = FakeSource()
         val viewModel = MainViewModel(mock<Application>(), source)
@@ -250,9 +298,11 @@ class MainViewModelServersChangedTest {
         source.events.send(MainServiceEvent.MeasureDelayResult(measured, answered))
         viewModel.awaitStatus(MainStatus.ConnectionTest(measured))
         assertFalse(viewModel.uiState.value.isTesting)
+        assertEquals("Connection succeeded in 48 ms", viewModel.formatStatus(viewModel.uiState.value.status))
         val located = measured.copy(country = "DE", ipAddress = "203.0.113.7")
         source.events.send(MainServiceEvent.MeasureDelayResult(located, answered))
         viewModel.awaitStatus(MainStatus.ConnectionTest(located))
+        assertEquals("Connection succeeded in 48 ms\n(DE) 203.0.113.7", viewModel.formatStatus(viewModel.uiState.value.status))
 
         // Late: the cancelled request's reply and cancel, then this one's IP lookup cancelled.
         source.events.send(MainServiceEvent.MeasureDelayResult(ConnectionTestResult(delayMillis = 999), cancelled))
@@ -261,6 +311,12 @@ class MainViewModelServersChangedTest {
         delay(200)
         assertEquals(MainStatus.ConnectionTest(located), viewModel.uiState.value.status)
         assertFalse(viewModel.uiState.value.isTesting)
+
+        viewModel.testCurrentServerRealPing()
+        val failed = MainStatus.ConnectionTest(ConnectionTestResult(delayMillis = -1, errorMessage = "Timeout"))
+        source.events.send(MainServiceEvent.MeasureDelayResult(failed.result, source.currentTests.last()))
+        viewModel.awaitStatus(failed)
+        assertEquals("Connection test failed: Timeout", viewModel.formatStatus(viewModel.uiState.value.status))
     }
 
     @Test

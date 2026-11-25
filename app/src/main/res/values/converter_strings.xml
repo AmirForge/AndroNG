@@ -1,0 +1,26 @@
+<resources>
+    <string name="dns_free_unavailable">Free DNS profiles are unavailable right now.</string>
+    <string name="pro_network_error">Could not reach the subscription panel. Check your internet connection.</string>
+    <string name="andro_header_update">Update</string>
+    <string name="subscription_expired_header">Subscription expired</string>
+    <string name="legacy_mtu_parallel_hint">More parallel MTU tests can make the first connection faster, but may put pressure on the phone.</string>
+    <string name="config_converter">Protocol Lab</string>
+    <string name="converter_description">Try each protocol in this lab to find the ones that work on your connection. Pick a successful protocol and a source to create a my star subscription.</string>
+    <string name="converter_start">Start testing</string>
+    <string name="converter_duration">The full check may take a few minutes.</string>
+    <string name="converter_progress">Testing %1$d of %2$d</string>
+    <string name="converter_progress_summary">%1$d of %2$d protocols responded</string>
+    <string name="converter_score_explanation">Relative to the fastest response in this run. The fastest scores 100%.</string>
+    <string name="converter_score">%1$d%%</string>
+    <string name="converter_testing">Testing connection…</string>
+    <string name="converter_results">Working protocols</string>
+    <string name="converter_no_results">No protocol passed this run.</string>
+    <string name="converter_choose_source">Choose a source for my star</string>
+    <string name="converter_no_sources">No sources are available in this section.</string>
+    <string name="dns_connect_link_types">Paste a Soar, Master or Cotton profile link.</string>
+    <string name="converter_profile">Config</string>
+    <string name="converter_subscription">Subscription</string>
+    <string name="converter_passed">Connected</string>
+    <string name="converter_failed">Unavailable</string>
+    <string name="converter_queued">Waiting to test</string>
+</resources>

@@ -87,3 +87,25 @@ private val Sparkles = listOf(
     Offset(0.75f, -0.22f) to 1.9f,
     Offset(0.83f, 0.19f) to 1.3f,
 )
+
+@Composable
+internal fun FailedDelayResult() {
+    val progress = rememberInfiniteTransition(label = "Failed delay result").animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(durationMillis = 1500, easing = LinearEasing)),
+        label = "Failure shake",
+    )
+    val label = stringResource(R.string.toast_failure)
+    val light = MaterialTheme.colorScheme.surfaceContainerLow.luminance() > 0.5f
+    val color = if (light) Color(0xFF6A2787) else Color(0xFFD085F0)
+    Canvas(Modifier.size(width = 39.dp, height = 16.dp).semantics { contentDescription = label }) {
+        val phase = progress.value
+        val shake = if (phase < 0.35f) sin(phase * 58f) * (1f - phase / 0.35f) else 0f
+        val center = Offset(size.width * 0.58f + 2.dp.toPx() * shake, size.height * 0.52f)
+        val arm = 4.dp.toPx()
+        val stroke = 2.4.dp.toPx()
+        drawLine(color, center + Offset(-arm, -arm), center + Offset(arm, arm), stroke, StrokeCap.Round)
+        drawLine(color, center + Offset(-arm, arm), center + Offset(arm, -arm), stroke, StrokeCap.Round)
+    }
+}

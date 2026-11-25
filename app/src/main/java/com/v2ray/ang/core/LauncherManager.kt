@@ -23,6 +23,11 @@ import com.v2ray.ang.util.Utils
 
 object LauncherManager {
 
+    /** Soar owns an independent VPN daemon and never loads native code in the UI process. */
+    fun startSoar(context: Context) {
+        MessageHelper.startSoar(context)
+    }
+
     fun startServiceFromToggle(context: Context): Boolean {
         if (MmkvManager.getSelectServer().isNullOrEmpty()) {
             context.toast(R.string.app_tile_first_use)

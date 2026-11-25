@@ -52,8 +52,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
@@ -107,6 +105,7 @@ private fun AetherRefreshIcon(spinning: Boolean, label: String) {
 fun GroupPagerPage(
     groupId: String,
     starredTestGuids: Set<String>,
+    endpointRefreshResults: Map<String, Boolean>,
     mainViewModel: MainViewModel,
     selectedGuid: String?,
     isPreparingAether: Boolean,
@@ -175,6 +174,7 @@ fun GroupPagerPage(
         ServerListPage(
             rows = groupState.rows,
             starredTestGuids = starredTestGuids,
+            endpointRefreshResults = endpointRefreshResults,
             selectedGuid = selectedGuid,
             locateTarget = locateTarget?.takeIf { it.groupId == groupId },
             canReorder = canReorder,
@@ -219,6 +219,7 @@ private class ServerRowActions(
 private fun ServerListPage(
     rows: List<ServerRowUiModel>,
     starredTestGuids: Set<String>,
+    endpointRefreshResults: Map<String, Boolean>,
     selectedGuid: String?,
     locateTarget: LocateTarget?,
     canReorder: Boolean,
@@ -259,6 +260,7 @@ private fun ServerListPage(
                         isSelected = row.guid == selectedGuid,
                         doubleColumnDisplay = true,
                         showStarredResult = row.guid in starredTestGuids,
+                                endpointRefreshResult = endpointRefreshResults[row.guid],
                         actions = actions
                     )
                 }
@@ -312,6 +314,7 @@ private fun ServerListPage(
                                 row = row,
                                 isSelected = row.guid == selectedGuid,
                                 showStarredResult = row.guid in starredTestGuids,
+                                endpointRefreshResult = endpointRefreshResults[row.guid],
                                 actions = actions
                             )
                         }
@@ -321,6 +324,7 @@ private fun ServerListPage(
                         row = row,
                         isSelected = row.guid == selectedGuid,
                         showStarredResult = row.guid in starredTestGuids,
+                                endpointRefreshResult = endpointRefreshResults[row.guid],
                         actions = actions
                     )
                 }
@@ -366,9 +370,10 @@ private fun ServerItemRow(
     row: ServerRowUiModel,
     isSelected: Boolean,
     showStarredResult: Boolean,
+    endpointRefreshResult: Boolean?,
     actions: ServerRowActions
 ) {
-    ServerItemColumn(row, isSelected, doubleColumnDisplay = false, showStarredResult = showStarredResult, actions = actions)
+    ServerItemColumn(row, isSelected, doubleColumnDisplay = false, showStarredResult = showStarredResult, endpointRefreshResult = endpointRefreshResult, actions = actions)
 }
 
 @Composable
@@ -377,9 +382,10 @@ private fun ServerItemColumn(
     isSelected: Boolean,
     doubleColumnDisplay: Boolean,
     showStarredResult: Boolean,
+    endpointRefreshResult: Boolean?,
     actions: ServerRowActions
 ) {
-    ServerListItem(row, isSelected, doubleColumnDisplay, showStarredResult, actions)
+    ServerListItem(row, isSelected, doubleColumnDisplay, showStarredResult, endpointRefreshResult, actions)
 }
 
 @Composable
@@ -388,13 +394,9 @@ private fun ServerListItem(
     isSelected: Boolean,
     doubleColumnDisplay: Boolean,
     showStarredResult: Boolean,
+    endpointRefreshResult: Boolean?,
     actions: ServerRowActions
 ) {
-    val testResult = if (row.testDelayMillis == 0L) {
-        ""
-    } else {
-        stringResource(R.string.server_test_delay_value, row.testDelayMillis)
-    }
     val selectedStateDescription = if (isSelected) {
         stringResource(R.string.acc_selected_server)
     } else {
@@ -405,6 +407,7 @@ private fun ServerListItem(
     val cardColor = if (isSelected) colors.primaryContainer else colors.surfaceContainerLow
     val outline = colors.primary.copy(alpha = if (isSelected) 0.82f else 0.38f)
     val canRefreshAether = QuickAetherProfile.canRefresh(row.profile)
+    val isFreeProfile = row.profile.subscriptionId == com.v2ray.ang.AppConfig.ANDROMEDA_SUBSCRIPTION_ID
     val hapticFeedback = LocalHapticFeedback.current
     var cardBounds by remember(row.guid) { mutableStateOf(Rect.Zero) }
     val rebuilding = actions.rebuildingAether && actions.refreshingAetherGuid == row.guid
@@ -446,7 +449,7 @@ private fun ServerListItem(
                     stateDescription = selectedStateDescription
                 }
             }
-            .clickable { actions.select(row.guid) }
+            .clickable(enabled = actions.refreshingAetherGuid != row.guid) { actions.select(row.guid) }
     ) {
         Column(
             Modifier
@@ -466,7 +469,7 @@ private fun ServerListItem(
                         AetherRefreshIcon(actions.refreshingAetherGuid == row.guid, refreshLabel)
                     }
                 }
-                if (doubleColumnDisplay || isAether) {
+                if (!isFreeProfile && (doubleColumnDisplay || isAether)) {
                     IconButton(onClick = { actions.more(row.guid, row.profile) }, Modifier.size(36.dp)) {
                         Icon(
                             painterResource(R.drawable.ic_more_vert_24dp),
@@ -474,7 +477,7 @@ private fun ServerListItem(
                             Modifier.size(24.dp)
                         )
                     }
-                } else {
+                } else if (!isFreeProfile) {
                     IconButton(onClick = { actions.share(row.guid, row.profile) }, Modifier.size(36.dp)) {
                         Icon(
                             painterResource(R.drawable.ic_share_24dp),
@@ -532,16 +535,19 @@ private fun ServerListItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                if (showStarredResult) {
+                if (endpointRefreshResult != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (endpointRefreshResult) StarredDelayResult() else FailedDelayResult()
+                        Text(
+                            stringResource(if (endpointRefreshResult) R.string.aether_endpoint_updated else R.string.aether_endpoint_error),
+                            fontSize = 10.sp,
+                            color = if (endpointRefreshResult) colors.primary else colors.error,
+                            maxLines = 1,
+                        )
+                    }
+                } else if (showStarredResult) {
                     if (row.testDelayMillis > 0L) StarredDelayResult()
-                } else {
-                    Text(
-                        testResult,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (row.testDelayMillis < 0L) colors.error else colors.tertiary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    else if (row.testDelayMillis < 0L) FailedDelayResult()
                 }
             }
         }
@@ -553,7 +559,7 @@ private fun ServerListItem(
                 },
                 enabled = !actions.isPreparingAether,
                 modifier = Modifier.align(Alignment.BottomEnd)
-                    .padding(end = 46.dp, bottom = 4.dp)
+                    .padding(end = if (isFreeProfile) 10.dp else 46.dp, bottom = 4.dp)
                     .size(width = 48.dp, height = 36.dp),
             ) {
                 Icon(
@@ -567,20 +573,38 @@ private fun ServerListItem(
     }
 }
 
-/** A fixed blur silhouette. No address or port is passed into the renderer or semantics tree. */
+/** Decorative particles independent of the hidden address and port. */
 @Composable
 private fun HiddenEndpoint() {
-    val tint = MaterialTheme.colorScheme.onSurfaceVariant
+    val colors = MaterialTheme.colorScheme
+    val particles = remember {
+        val random = kotlin.random.Random(19)
+        List(70) {
+            Offset(random.nextFloat(), random.nextFloat())
+        }
+    }
+    val phase = rememberInfiniteTransition(label = "Endpoint particles").animateFloat(
+        initialValue = 0f,
+        targetValue = (2 * Math.PI).toFloat(),
+        animationSpec = infiniteRepeatable(tween(2800, easing = LinearEasing)),
+        label = "Particle drift",
+    )
     Canvas(Modifier.width(96.dp).height(16.dp)) {
-        val edge = 2.dp.toPx().coerceAtMost(size.width / 4)
-        val radius = CornerRadius(size.height / 2)
-        drawRoundRect(tint.copy(alpha = 0.07f), cornerRadius = radius)
-        drawRoundRect(
-            brush = Brush.verticalGradient(listOf(tint.copy(alpha = 0.02f), tint.copy(alpha = 0.35f), tint.copy(alpha = 0.02f))),
-            topLeft = Offset(edge, 0f),
-            size = Size(size.width - edge * 2, size.height),
-            cornerRadius = radius,
-        )
+        drawRoundRect(colors.primary.copy(alpha = .08f), cornerRadius = CornerRadius(5.dp.toPx()))
+        val time = phase.value
+        val inset = 3.dp.toPx()
+        particles.forEachIndexed { index, particle ->
+            val angle = time + index * 2.39996f
+            val glow = .22f + .24f * (.5f + .5f * kotlin.math.sin(angle * 2f))
+            drawCircle(
+                color = colors.primary.copy(alpha = glow),
+                radius = (if (index % 6 == 0) .78.dp else .46.dp).toPx(),
+                center = Offset(
+                    inset + particle.x * (size.width - 2 * inset) + kotlin.math.sin(angle) * 1.5.dp.toPx(),
+                    inset + particle.y * (size.height - 2 * inset) + kotlin.math.cos(angle) * 1.dp.toPx(),
+                ),
+            )
+        }
     }
 }
 

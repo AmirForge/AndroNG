@@ -18,8 +18,11 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowCompat
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.handler.MmkvManager
@@ -158,6 +161,13 @@ fun AppTheme(
         else -> LightColor
     }
     val snackbarController = rememberAppSnackbarController()
+    val density = LocalDensity.current
+    val locale = LocalConfiguration.current.locales[0]
+    val textDensity = if (locale?.language == "fa") {
+        Density(density.density, density.fontScale * 0.92f)
+    } else {
+        density
+    }
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -173,7 +183,8 @@ fun AppTheme(
 
     CompositionLocalProvider(
         LocalDarkTheme provides effectiveDarkTheme,
-        LocalAppSnackbar provides snackbarController
+        LocalAppSnackbar provides snackbarController,
+        LocalDensity provides textDensity,
     ) {
         MaterialTheme(
             colorScheme = colorScheme

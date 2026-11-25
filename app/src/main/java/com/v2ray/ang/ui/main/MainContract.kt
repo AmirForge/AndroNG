@@ -45,6 +45,16 @@ data class MainUiState(
     val proBusy: Boolean = false,
     val proError: Int? = null,
     val proBlockedUntil: Long = 0,
+    val usageOpen: Boolean = false,
+    val usageGroup: String? = null,
+    val usageLoading: Boolean = false,
+    val diagnosticDialog: Boolean = false,
+    val converter: ConverterState? = null,
+    val headerUpdateUrl: String? = null,
+    val liveSubscriptionStatus: Map<String, com.v2ray.ang.dto.entities.SubscriptionUsageInfo> = emptyMap(),
+    val diagnosticLoading: Boolean = false,
+    val diagnosticOutRules: List<DiagnosticOutRuleChoice> = emptyList(),
+    val usageReport: com.v2ray.ang.handler.SubscriptionUsageReport? = null,
     val testProgress: AetherProgress? = null,
     val aetherProgress: AetherProgress? = null,
     val refreshingAllEndpoints: Boolean = false,
@@ -52,6 +62,7 @@ data class MainUiState(
     val rebuildingAether: Boolean = false,
     val aetherConnectionRequest: String? = null,
     val controlPanel: ControlPanelContent = ControlPanelContent(),
+    val endpointRefreshResults: Map<String, Boolean> = emptyMap(),
     val starredTestGuids: Map<String, Set<String>> = emptyMap(),
 ) {
     val isCreatingAether: Boolean get() = aetherProgress != null
@@ -78,10 +89,19 @@ sealed interface MainAction {
     data object RefreshControlPanel : MainAction
     data object BuyProCode : MainAction
     data object OpenProSubscription : MainAction
+    data object OpenUsageReport : MainAction
+    data object CloseUsageReport : MainAction
+    data class SelectUsageGroup(val id: String) : MainAction
     data object DismissProSubscription : MainAction
     data class SubmitProCode(val code: String) : MainAction
     data object CancelPreparation : MainAction
     data object ImportFreeConfiguration : MainAction
+    data object BuildDiagnosticConfigs : MainAction
+    data object StartConverter : MainAction
+    data object CloseConverter : MainAction
+    data class ConvertWith(val variant: Int, val source: String, val subscription: Boolean) : MainAction
+    data object DismissDiagnosticConfigs : MainAction
+    data class BuildDiagnosticConfigsWithOutRule(val guid: String) : MainAction
     data class DismissControlPanelUpdate(val versionCode: Int) : MainAction
     data object RefreshGroups : MainAction
     data object ToggleService : MainAction
@@ -122,6 +142,7 @@ sealed interface MainAction {
     data class OpenContact(val username: String) : MainAction
 
     data object RefreshAllAetherEndpoints : MainAction
+    data class ScanAllAetherEndpoints(val mode: com.v2ray.ang.enums.AetherScanMode) : MainAction
     data object CreateAetherProfile : MainAction
     data class RefreshAetherProfile(val guid: String, val rebuild: Boolean = false) : MainAction
     data class ConnectPreparedAether(val guid: String) : MainAction

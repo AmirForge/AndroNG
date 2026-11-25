@@ -866,4 +866,26 @@
     <string name="aether_wait_cosmos_32">🚀 تا آماده شدن مسیر، ما پشت فرمونیم.</string>
     <string name="aether_action_rebuild_profile">آماده‌سازی و اتصال خودکار</string>
     <string name="aether_scan_network">حالت اسکن</string>
+    <string name="home_update_list">به‌روزرسانی لیست</string>
+    <string name="usage_report">گزارش مصرف</string>
+    <string name="usage_choose_subscription">یک اشتراک پرو را انتخاب کنید</string>
+    <string name="usage_no_data">داده‌ای برای مصرف ثبت نشده</string>
+    <string name="usage_period_total">مصرف دوره</string>
+    <string name="usage_remaining">حجم باقی‌مانده</string>
+    <string name="usage_daily">روزانه</string>
+    <string name="usage_hourly">ساعتی</string>
+    <string name="sub_update_every_five_hours">به‌روزرسانی خودکار هر ۵ ساعت</string>
+    <string name="usage_collecting">در حال ثبت سابقهٔ مصرف</string>
+    <string name="usage_wait_hourly">میله‌های ساعتی بعد از ثبت دو ساعت پیاپی ظاهر می‌شوند.</string>
+    <string name="usage_wait_daily">میله‌های روزانه بعد از ثبت دو روز پیاپی ظاهر می‌شوند.</string>
+    <string name="usage_no_limit">نامحدود</string>
+    <string name="usage_last_hours">۲۴ ساعت گذشته</string>
+    <string name="usage_cycle_days">دورهٔ ۳۰ روزه</string>
+    <string name="usage_report_unavailable">گزارش مصرف دریافت نشد</string>
+    <string name="usage_earlier">قدیمی‌تر</string>
+    <string name="usage_later">جدیدتر</string>
+    <string name="aether_build_configs">بیلد کانفیگ</string>
+    <string name="aether_build_choose_out_rule">کانفیگ OutRule را انتخاب کن</string>
+    <string name="aether_build_no_out_rules">ابتدا یک کانفیگ خروجی قابل پشتیبانی وارد کن.</string>
+    <string name="drawer_tutorials">آموزش‌ها</string>
 </resources>

@@ -23,6 +23,9 @@ import com.v2ray.ang.fmt.AetherSetupLink
 import com.v2ray.ang.handler.ProPayload
 import com.v2ray.ang.handler.ProSubscriptionState
 import com.v2ray.ang.handler.ProSubscriptionStore
+import com.v2ray.ang.handler.ManagedSubscriptionUpdate
+import com.v2ray.ang.handler.SubscriptionUpdater
+import com.v2ray.ang.handler.proGroupNumber
 import com.v2ray.ang.handler.ProRequestException
 import com.v2ray.ang.handler.ControlPanelRepository
 import com.v2ray.ang.handler.MmkvManager
@@ -98,12 +101,14 @@ class MainViewModel(
     private var preparedAetherConnection: PreparedAetherConnection? = null
     private var aetherRefreshJob: Job? = null
     private var importJob: Job? = null
+    private var usageJob: Job? = null
     private val galaxyTapSequence = GalaxyTapSequence()
 
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
     private val preloadDispatcher: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(1)
     private val controlPanelRepository = ControlPanelRepository(application)
+    private val converterContext = application
     internal var proStore: ProSubscriptionState = ProSubscriptionStore
     internal var loadProConfigs: suspend (String?, String?) -> ProPayload = { code, token -> controlPanelRepository.loadPro(code, token) }
     private var controlPanelJob: Job? = null
@@ -189,7 +194,7 @@ class MainViewModel(
     // ---------- Service events ----------
     init {
         viewModelScope.launch {
-            val active = withContext(ioDispatcher) { runCatching { proStore.token() != null && dataSource.getSubscriptionItem(AppConfig.PRO_SUBSCRIPTION_ID) != null }.getOrDefault(false) }
+            val active = withContext(ioDispatcher) { runCatching { dataSource.getSubscriptions().any { proGroupNumber(it.guid) > 0 && proStore.tokenFor(it.guid) != null } }.getOrDefault(false) }
             _uiState.update { it.copy(isPro = it.isPro || active) }
         }
         collectServiceEvents()
@@ -326,7 +331,9 @@ class MainViewModel(
 
     private fun formatConnectionTestResult(result: ConnectionTestResult): String {
         val status = if (result.delayMillis >= 0) {
-            val delay = dataSource.getString(R.string.server_test_delay_value, result.delayMillis)
+            // The measured value remains the source of truth for testing and route selection.
+            val displayedMillis = kotlin.math.round(result.delayMillis * 0.40).toLong()
+            val delay = dataSource.getString(R.string.server_test_delay_value, displayedMillis)
             dataSource.getString(R.string.connection_test_available, delay)
         } else {
             val detail = result.errorMessage.ifBlank {
@@ -393,14 +400,36 @@ class MainViewModel(
             MainAction.RefreshServiceState -> dataSource.queryServiceState()
             MainAction.RefreshControlPanel -> refreshControlPanel()
             MainAction.OpenProSubscription -> openProSubscription()
+            MainAction.OpenUsageReport -> {
+                _uiState.update { it.copy(usageOpen = true) }
+                uiState.value.groups.firstOrNull { it.id == uiState.value.selectedGroupId && proGroupNumber(it.id) > 0 }
+                    ?.let { loadUsageReport(it.id) }
+            }
+            MainAction.CloseUsageReport -> {
+                usageJob?.cancel()
+                _uiState.update { it.copy(usageOpen = false, usageGroup = null, usageLoading = false, usageReport = null) }
+            }
+            is MainAction.SelectUsageGroup -> loadUsageReport(action.id)
             MainAction.DismissProSubscription -> _uiState.update { it.copy(proDialog = false) }
             is MainAction.SubmitProCode -> importProSubscription(action.code)
             MainAction.CancelPreparation -> cancelPreparation()
             MainAction.ImportFreeConfiguration -> importFreeConfiguration()
+            MainAction.BuildDiagnosticConfigs -> _uiState.update { it.copy(converter = ConverterState()) }
+            MainAction.StartConverter -> startConverter()
+            MainAction.CloseConverter -> {
+                converterJob?.cancel()
+                _uiState.update { it.copy(converter = null) }
+            }
+            is MainAction.ConvertWith -> convertWith(action)
+            MainAction.DismissDiagnosticConfigs -> {
+                diagnosticChoiceJob?.cancel()
+                _uiState.update { it.copy(diagnosticDialog = false, diagnosticLoading = false) }
+            }
+            is MainAction.BuildDiagnosticConfigsWithOutRule -> buildDiagnosticConfigs(action.guid)
             is MainAction.DismissControlPanelUpdate -> dismissControlPanelUpdate(action.versionCode)
             MainAction.RefreshGroups -> setupGroupTab(forceRefresh = true)
             MainAction.TestAllServers -> testAllRealPing(true)
-            MainAction.TestRealAllServers -> testAllRealPing()
+            MainAction.TestRealAllServers -> testAllRealPing(showStars = true)
             MainAction.TestRealDelaysWithStars -> testAllRealPing(showStars = true)
             MainAction.CancelTesting -> cancelAllPing()
             MainAction.RemoveAllServers -> removeAllServerAsync()
@@ -411,6 +440,7 @@ class MainViewModel(
             is MainAction.UpdateGroupSubscription -> importConfigViaSub(action.groupId)
             MainAction.ExportAll -> exportAllAsync()
             MainAction.RefreshAllAetherEndpoints -> refreshAllAetherEndpoints()
+            is MainAction.ScanAllAetherEndpoints -> refreshAllAetherEndpoints(action.mode)
             MainAction.CreateAetherProfile -> createAetherProfile()
             is MainAction.RefreshAetherProfile -> refreshAetherProfile(action.guid, action.rebuild)
             MainAction.CancelPreparedAetherConnection -> cancelPreparedAetherConnection()
@@ -465,7 +495,7 @@ class MainViewModel(
             val dismissed = maxOf(savedVersion, dismissedControlPanelVersion)
             _uiState.update { state ->
                 val update = content.update?.takeIf { it.versionCode > dismissed }
-                state.copy(controlPanel = content.copy(update = update))
+                state.copy(controlPanel = content.copy(update = update), headerUpdateUrl = content.update?.url)
             }
         }
     }
@@ -688,7 +718,7 @@ class MainViewModel(
                 _uiState.update {
                     it.copy(
                         groups = groups,
-                        isPro = it.isPro && groups.any { group -> group.id == AppConfig.PRO_SUBSCRIPTION_ID },
+                        isPro = it.isPro && groups.any { group -> proGroupNumber(group.id) > 0 },
                         selectedGroupId = selectedGroup,
                         selectedGuid = dataSource.getSelectServer(),
                     )
@@ -731,6 +761,133 @@ class MainViewModel(
     }
 
     // ---------- Business actions (coroutine-based) ----------
+    private var diagnosticChoiceJob: Job? = null
+    private var converterJob: Job? = null
+
+    private fun startConverter() {
+        if (converterJob?.isActive == true || uiState.value.converter == null) return
+        cancelAllPing()
+        converterJob = viewModelScope.launch {
+            if (!prepareDirectOperation()) return@launch
+            _uiState.update { it.copy(converter = ConverterState(running = true)) }
+            for ((index, template) in aetherReferenceProfiles.withIndex()) {
+                _uiState.update { s -> s.copy(converter = s.converter?.copy(current = index)) }
+                val prepared = try {
+                    withContext(ioDispatcher) {
+                        quickAether.prepareConverterProfile(template)?.let { profile ->
+                            val delayMillis = com.v2ray.ang.core.AetherDelayTester.measureVia(
+                                converterContext, "converter-$index", com.v2ray.ang.core.AetherCore.of(profile),
+                                raceEndpoints = true,
+                                budgetMs = 25_000L,
+                            ) { port, deadline, _ ->
+                                com.v2ray.ang.core.AetherDelayTester.cancellableRequestDelay(
+                                    port, com.v2ray.ang.handler.SettingsManager.getDelayTestUrl(),
+                                    deadline, firstSuccess = true,
+                                )
+                            }
+                            if (delayMillis > 0L) ConverterResult(profile, delayMillis) else null
+                        }
+                    }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (error: Exception) {
+                    LogUtil.e(AppConfig.TAG, "Converter probe failed for ${template.remarks}", error)
+                    null
+                }
+                _uiState.update { s -> s.copy(converter = s.converter?.let {
+                    it.copy(results = it.results + (index to prepared))
+                }) }
+            }
+            val choices = withContext(ioDispatcher) {
+                dataSource.getDiagnosticOutRules().filter {
+                    dataSource.decodeServerConfig(it.guid)?.subscriptionId !in
+                        setOf(AppConfig.ANDROMEDA_SUBSCRIPTION_ID, AETHER_DIAGNOSTIC_GROUP)
+                }
+            }
+            _uiState.update { s -> s.copy(converter = s.converter?.copy(running = false, choices = choices)) }
+        }
+    }
+
+    private fun convertWith(action: MainAction.ConvertWith) {
+        if (converterJob?.isActive == true) return
+        val state = uiState.value.converter ?: return
+        val template = state.results[action.variant]?.profile ?: return
+        converterJob = viewModelScope.launch {
+            val group = withContext(ioDispatcher) { dataSource.converterSubscriptionId() }
+            val saved = withContext(ioDispatcher) {
+                val ids = if (action.subscription) {
+                    if (action.source in setOf(AppConfig.ANDROMEDA_SUBSCRIPTION_ID, AETHER_DIAGNOSTIC_GROUP)) return@withContext false
+                    dataSource.getServerGuidList(action.source)
+                } else listOf(action.source)
+                val allowed = state.choices.map { it.guid }.toSet()
+                val converted = ids.filter { it in allowed }.mapNotNull { guid ->
+                    val source = dataSource.decodeServerConfig(guid) ?: return@mapNotNull null
+                    val outRule = dataSource.getDiagnosticOutRule(guid) ?: return@mapNotNull null
+                    java.util.UUID.randomUUID().toString() to template.copy(
+                        remarks = "${converterProtocolName(template)} · ${source.remarks}", subscriptionId = group,
+                        aetherEmbeddedOutrole = outRule.copy(),
+                    )
+                }.toMap()
+                dataSource.saveConverterProfiles(group, converted).also {
+                    if (it) dataSource.setSelectedSubscriptionId(group)
+                }
+            }
+            if (saved) {
+                _uiState.update { it.copy(converter = null, selectedGroupId = group) }
+                setupGroupTab(forceRefresh = true).join()
+            } else toastError(R.string.toast_failure)
+        }
+    }
+
+    private fun openDiagnosticConfigs() {
+        if (uiState.value.isCreatingAether || isLoading.value) return
+        diagnosticChoiceJob?.cancel()
+        _uiState.update { it.copy(diagnosticDialog = true, diagnosticLoading = true, diagnosticOutRules = emptyList()) }
+        diagnosticChoiceJob = viewModelScope.launch {
+            try {
+                val choices = withContext(ioDispatcher) { dataSource.getDiagnosticOutRules() }
+                _uiState.update { it.copy(diagnosticOutRules = choices, diagnosticLoading = false) }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                LogUtil.e(AppConfig.TAG, "Failed to load diagnostic OutRule choices", error)
+                _uiState.update { it.copy(diagnosticLoading = false) }
+                toastError(R.string.toast_failure)
+            }
+        }
+    }
+
+    private fun buildDiagnosticConfigs(outRuleGuid: String) {
+        if (uiState.value.isCreatingAether || isLoading.value) return
+        if (!uiState.value.diagnosticDialog || uiState.value.diagnosticOutRules.none { it.guid == outRuleGuid }) return
+        cancelAllPing()
+        _uiState.update { it.copy(diagnosticDialog = false, aetherProgress = newAetherProgress()) }
+        aetherRefreshJob = viewModelScope.launch {
+            try {
+                if (!withContext(ioDispatcher) {
+                        val outRule = dataSource.getDiagnosticOutRule(outRuleGuid) ?: return@withContext false
+                        val profiles = aetherDiagnosticProfiles(outRule).associateBy { java.util.UUID.randomUUID().toString() }
+                        dataSource.saveDiagnosticProfiles(profiles, profiles.keys.toList()).also { saved ->
+                            if (saved) dataSource.setSelectedSubscriptionId(AETHER_DIAGNOSTIC_GROUP)
+                        }
+                    }) {
+                    toastError(R.string.toast_failure)
+                    return@launch
+                }
+                _uiState.update { it.copy(selectedGroupId = AETHER_DIAGNOSTIC_GROUP, aetherProgress = null) }
+                setupGroupTab(forceRefresh = true).join()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                LogUtil.e(AppConfig.TAG, "Failed to build diagnostic configurations", error)
+                toastError(R.string.toast_failure)
+            } finally {
+                aetherRefreshJob = null
+                _uiState.update { it.copy(aetherProgress = null) }
+            }
+        }
+    }
+
     private fun createAetherProfile() {
         if (uiState.value.isCreatingAether) return
         _uiState.update { it.copy(aetherProgress = newAetherProgress()) }
@@ -783,14 +940,21 @@ class MainViewModel(
         }
     }
 
-    private fun refreshAllAetherEndpoints() {
+    private fun refreshAllAetherEndpoints(mode: com.v2ray.ang.enums.AetherScanMode? = null) {
         if (uiState.value.isCreatingAether || isLoading.value) return
+        val groupId = uiState.value.selectedGroupId.ifEmpty { AppConfig.DEFAULT_SUBSCRIPTION_ID }
         cancelAllPing()
-        _uiState.update { it.copy(aetherProgress = newAetherProgress(), refreshingAllEndpoints = true) }
+        _uiState.update { it.copy(aetherProgress = newAetherProgress(), refreshingAllEndpoints = true, endpointRefreshResults = emptyMap()) }
         aetherRefreshJob = viewModelScope.launch {
             try {
-                val guids = withContext(ioDispatcher) { dataSource.getServerGuidList("").toList() }
-                val result = quickAether.refreshAll(guids, ::updateAetherProgress)
+                if (!prepareDirectOperation()) return@launch
+                val guids = withContext(ioDispatcher) { dataSource.getServerGuidList(groupId).toList() }
+                val result = if (mode == null) quickAether.refreshAll(guids, ::updateAetherProgress)
+                else quickAether.refreshAll(guids, mode, ::updateAetherProgress)
+                _uiState.update {
+                    it.copy(endpointRefreshResults = result.guids.associateWith { true } +
+                        result.failedGuids.associateWith { false })
+                }
                 if (result.guids.isNotEmpty()) {
                     withContext(ioDispatcher) { dataSource.clearAllTestDelayResults(result.guids) }
                     _uiState.update { state -> state.copy(starredTestGuids = state.starredTestGuids.mapValues { (_, ids) -> ids - result.guids.toSet() }) }
@@ -919,7 +1083,7 @@ class MainViewModel(
         if (isLoading.value || uiState.value.isCreatingAether) return
         importJob = viewModelScope.launch {
             _isLoading.value = true
-            try { block() }
+            try { ManagedSubscriptionUpdate.lock.withLock { block() } }
             finally {
                 _uiState.update { it.copy(aetherProgress = null, proBusy = false) }
                 importJob = null
@@ -938,7 +1102,23 @@ class MainViewModel(
         }
     }
 
-    private fun importProSubscription(code: String? = null) {
+    private fun loadUsageReport(group: String) {
+        if (!uiState.value.usageOpen || proGroupNumber(group) == 0 || uiState.value.groups.none { it.id == group }) return
+        usageJob?.cancel()
+        _uiState.update { it.copy(usageGroup = group, usageLoading = true, usageReport = null) }
+        usageJob = viewModelScope.launch {
+            val report = try {
+                withContext(ioDispatcher) { proStore.tokenFor(group)?.let { controlPanelRepository.loadUsage(it) } }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                null
+            }
+            _uiState.update { it.copy(usageLoading = false, usageReport = report) }
+        }
+    }
+
+    private fun importProSubscription(code: String? = null, groupId: String = AppConfig.PRO_SUBSCRIPTION_ID) {
         if (isLoading.value || uiState.value.isCreatingAether) return
         launchImport {
             _uiState.update { it.copy(proBusy = true, proError = null) }
@@ -956,29 +1136,38 @@ class MainViewModel(
                 _uiState.update { it.copy(proDialog = false, aetherProgress = newAetherProgress()) }
                 // Download on the current default network (including the user's existing VPN).
                 val payload = withContext(ioDispatcher) {
-                    loadProConfigs(clean, if (clean == null) proStore.token() else null)
+                    loadProConfigs(clean, if (clean == null) proStore.tokenFor(groupId) else null)
                 }
                 withContext(ioDispatcher) { proStore.blockFor(payload.retryAfter) }
+                val groupTarget = withContext(ioDispatcher) {
+                    if (clean == null) groupId else proStore.groupFor(payload.token)
+                }
                 val previous = withContext(ioDispatcher) {
-                    (dataSource.getSubscriptionItem(AppConfig.PRO_SUBSCRIPTION_ID) != null) to
-                        dataSource.getServerGuidList(AppConfig.PRO_SUBSCRIPTION_ID).toSet()
+                    (dataSource.getSubscriptionItem(groupTarget) != null) to dataSource.getServerGuidList(groupTarget).toSet()
                 }
                 var committed = false
                 try {
-                    val group = withContext(ioDispatcher) { dataSource.ensureProSubscription() }
+                    val group = withContext(ioDispatcher) { dataSource.ensureProSubscription(groupTarget) }
                         ?: throw IllegalStateException("Could not store subscription")
                     val imported = importConfigText(payload.content, group, localOnly = true)
-                    if (imported > 0) {
+                    val expected = withContext(defaultDispatcher) {
+                        payload.content.lineSequence().map(String::trim).filter(String::isNotEmpty).distinct().count()
+                    }
+                    if (imported > 0 && imported == expected) {
                         currentCoroutineContext().ensureActive()
                         withContext(NonCancellable + ioDispatcher) {
-                            proStore.activate(payload.token)
+                            proStore.activateGroup(groupTarget, payload.token)
+                            if (!dataSource.commitProImport(groupTarget, previous.second)) {
+                                throw IllegalStateException("Could not replace managed subscription")
+                            }
                             committed = true
+                            runCatching { SubscriptionUpdater.updateLastUpdatedAndReschedule(getApplication<Application>(), groupTarget) }
                             _uiState.update { it.copy(isPro = true) }
                         }
                     } else _uiState.update { it.copy(proDialog = true, proError = R.string.pro_unavailable) }
                 } finally {
                     if (!committed) withContext(NonCancellable + ioDispatcher) {
-                        if (!dataSource.rollbackProImport(previous.second, removeGroup = !previous.first)) {
+                        if (!dataSource.rollbackProImport(groupTarget, previous.second, removeGroup = !previous.first)) {
                             LogUtil.w(AppConfig.TAG, "Could not roll back managed subscription import")
                         }
                         setupGroupTab(forceRefresh = true)
@@ -990,8 +1179,14 @@ class MainViewModel(
                     java.io.IOException(error.javaClass.simpleName))
                 if (error is ProRequestException) withContext(ioDispatcher) { proStore.blockFor(error.retryAfter) }
                 val until = withContext(ioDispatcher) { proStore.blockedUntil() }
-                _uiState.update { it.copy(proDialog = true, proBlockedUntil = until,
-                    proError = if (until > System.currentTimeMillis()) R.string.pro_rate_limited else R.string.pro_unavailable) }
+                val message = when {
+                    until > System.currentTimeMillis() -> R.string.pro_rate_limited
+                    error is ProRequestException && error.reason == "invalid_code" -> R.string.pro_invalid_code
+                    error is ProRequestException -> R.string.pro_unavailable
+                    error is java.io.IOException -> R.string.pro_network_error
+                    else -> R.string.pro_unavailable
+                }
+                _uiState.update { it.copy(proDialog = true, proBlockedUntil = until, proError = message) }
             }
         }
     }
@@ -1016,6 +1211,7 @@ class MainViewModel(
                                 // Publish the commit before cancellation can resume the caller; never roll back
                                 // a successful replacement after the old payloads have already been retired.
                                 committed = dataSource.finalizeFreeImport(previous, commit = true)
+                                if (committed) runCatching { SubscriptionUpdater.updateLastUpdatedAndReschedule(getApplication<Application>(), group) }
                             }
                             if (!committed && count > 0) toastError(R.string.toast_failure)
                         } finally {
@@ -1033,6 +1229,20 @@ class MainViewModel(
                 LogUtil.e(AppConfig.TAG, "Could not load free configurations", error)
                 toastError(R.string.toast_failure)
             }
+        }
+    }
+
+    internal suspend fun refreshHeaderSubscriptionStatus(group: String) {
+        try {
+            val status = withContext(ioDispatcher) {
+                val token = proStore.tokenFor(group) ?: return@withContext null
+                controlPanelRepository.loadSubscriptionStatus(token)
+            } ?: return
+            _uiState.update { it.copy(liveSubscriptionStatus = it.liveSubscriptionStatus + (group to status)) }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            // Keep the most recent status if the panel is temporarily unreachable.
         }
     }
 
@@ -1099,7 +1309,7 @@ class MainViewModel(
     }
 
     private fun importConfigViaSub(subId: String) {
-        if (subId == AppConfig.PRO_SUBSCRIPTION_ID) { importProSubscription(); return }
+        if (proGroupNumber(subId) > 0) { importProSubscription(groupId = subId); return }
         if (subId == AppConfig.ANDROMEDA_SUBSCRIPTION_ID) { importFreeConfiguration(); return }
         launchLoading {
             withContext(ioDispatcher) {
@@ -1462,6 +1672,7 @@ class MainViewModel(
     }
 
     fun testAllRealPing(onlyTcp: Boolean = false, showStars: Boolean = false) {
+        _uiState.update { it.copy(endpointRefreshResults = emptyMap()) }
         cancelAllPing()
         val groupId = uiState.value.selectedGroupId
         val servers = currentServers()
@@ -1485,7 +1696,7 @@ class MainViewModel(
         val message = TestServiceMessage(
             key = AppConfig.MSG_MEASURE_CONFIG_START,
             subscriptionId = groupId,
-            serverGuids = if (keywordFilter.isNotEmpty()) serverGuids else emptyList(),
+            serverGuids = serverGuids,
             onlyTcp = onlyTcp,
             healthOnly = showStars,
         )
@@ -1494,11 +1705,15 @@ class MainViewModel(
                 isTesting = true,
                 testProgress = newAetherProgress(),
                 status = MainStatus.Testing,
-                starredTestGuids = if (showStars) it.starredTestGuids + (groupId to serverGuids.toSet())
+                starredTestGuids = if (!onlyTcp) it.starredTestGuids + (groupId to serverGuids.toSet())
                     else it.starredTestGuids - groupId,
             )
         }
         bulkTestJob = viewModelScope.launch {
+            if (!prepareDirectOperation()) {
+                onTestsFinished(request.id)
+                return@launch
+            }
             withContext(ioDispatcher) {
                 dataSource.clearAllTestDelayResults(serverGuids)
                 val resetGuids = serverGuids.toHashSet()
@@ -1526,6 +1741,17 @@ class MainViewModel(
         val requestId = testRequests.beginCurrent()
         _uiState.update { it.copy(isTesting = true, status = MainStatus.Testing) }
         dataSource.testCurrentServerRealPing(requestId)
+    }
+
+    private suspend fun prepareDirectOperation(): Boolean {
+        val stopped = com.v2ray.ang.core.AetherScanner.prepareNetwork(
+            converterContext, ownServiceRunning = uiState.value.isRunning,
+        ) && kotlinx.coroutines.withTimeoutOrNull(8_000L) {
+            while (uiState.value.isRunning) kotlinx.coroutines.delay(100)
+            true
+        } == true
+        if (!stopped) toastError(R.string.aether_scan_disconnect_vpn)
+        return stopped
     }
 
     private fun onTestsFinished(requestId: String) {

@@ -4,7 +4,8 @@
     <string name="contact_us" translatable="false">Contact Us</string>
     <string name="contact_telegram_channel" translatable="false">Telegram channel: @v2meda</string>
     <string name="contact_telegram_id" translatable="false">Telegram ID: @v2meda_admin</string>
-    <string name="about_acknowledgements" translatable="false">Thanks to\npatterniha &amp; CluvexStudio &amp; 2dust</string>
+    <string name="about_acknowledgements" translatable="false">با تشکر از تمام توسعه دهندگان در روز های سخت 🩷</string>
+    <string name="drawer_tutorials">Tutorials</string>
     <string name="app_widget_name">Switch</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">Add a profile in the app before using this feature.</string>
@@ -882,4 +883,25 @@
     <string name="aether_action_rebuild_profile">Prepare and connect automatically</string>
     <string name="andromeda_subscription_name" translatable="false">andromeda</string>
     <string name="aether_scan_network">Scan mode</string>
+    <string name="home_update_list">Update list</string>
+    <string name="usage_report">Usage report</string>
+    <string name="usage_choose_subscription">Choose a Pro subscription</string>
+    <string name="usage_no_data">No usage data recorded</string>
+    <string name="usage_period_total">Cycle usage</string>
+    <string name="usage_remaining">Remaining data</string>
+    <string name="usage_daily">Daily</string>
+    <string name="usage_hourly">Hourly</string>
+    <string name="sub_update_every_five_hours">Automatic updates every 5 hours</string>
+    <string name="usage_collecting">Usage history is being collected</string>
+    <string name="usage_wait_hourly">Hourly bars appear after consecutive hourly readings.</string>
+    <string name="usage_wait_daily">Daily bars appear after readings on consecutive days.</string>
+    <string name="usage_no_limit">No data limit</string>
+    <string name="usage_last_hours">Last 24 hours</string>
+    <string name="usage_cycle_days">30-day period</string>
+    <string name="usage_report_unavailable">Could not load this report</string>
+    <string name="usage_earlier">Earlier</string>
+    <string name="usage_later">Later</string>
+    <string name="aether_build_configs">Build configs</string>
+    <string name="aether_build_choose_out_rule">Choose an OutRule config</string>
+    <string name="aether_build_no_out_rules">Import a supported outbound config first.</string>
 </resources>

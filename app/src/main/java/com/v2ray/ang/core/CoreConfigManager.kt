@@ -81,7 +81,7 @@ object CoreConfigManager {
      * Build a lightweight configuration for latency testing.
      *
      * The core flow is reused, then non-essential sections are removed. A configuration that runs
-     * on an Aether core dials it where it listens, whether the session's or a test's runs there.
+     * on an Aether core has its SOCKS destination updated to the temporary test listener.
      */
     fun getV2rayConfig4Speedtest(context: Context, guid: String): ConfigResult {
         try {
@@ -107,9 +107,8 @@ object CoreConfigManager {
             if (lacksMainOutbound(v2rayConfig)) return mainOutboundFailure(context, guid)
             postProcessForSpeedtest(v2rayConfig)
 
-            // Not routed through an inbound of this configuration: a test's core of its own dials out through
-            // the exit of the process's Xray, see AetherCoreManager.exitConfiguration, and the session's core,
-            // which a test may measure through, through the session's inbound.
+            // The test's Aether core dials out through the test process's Xray exit,
+            // see AetherCoreManager.exitConfiguration.
             val core = (dependency as? AetherDependency.Single)?.core
             if (core != null && lacksChainHop(core, v2rayConfig.outbounds)) return chainHopFailure(context, guid)
             if (core != null) exitNodeProblem(core, v2rayConfig.outbounds)?.let { return exitNodeFailure(context, guid, core, it) }

@@ -380,8 +380,10 @@ object MmkvManager {
     }
 
     /** Finalizes a staged free download only after new profiles exist; failed imports retain the old set. */
-    internal fun finalizeFreeImport(previous: Set<String>, commit: Boolean): Boolean = withProfileIndexLock {
-        val group = com.v2ray.ang.AppConfig.ANDROMEDA_SUBSCRIPTION_ID
+    internal fun finalizeFreeImport(previous: Set<String>, commit: Boolean): Boolean =
+        finalizeManagedImport(com.v2ray.ang.AppConfig.ANDROMEDA_SUBSCRIPTION_ID, previous, commit)
+
+    internal fun finalizeManagedImport(group: String, previous: Set<String>, commit: Boolean): Boolean = withProfileIndexLock {
         val current = decodeServerList(group).toList()
         val fresh = current.filterNot(previous::contains)
         if (commit && fresh.isEmpty()) return@withProfileIndexLock false

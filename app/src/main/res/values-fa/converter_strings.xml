@@ -1,0 +1,26 @@
+<resources>
+    <string name="dns_free_unavailable">فعلاً کانفیگ رایگان DNS در دسترس نیست.</string>
+    <string name="pro_network_error">ارتباط با پنل برقرار نشد. اینترنت را بررسی کنید.</string>
+    <string name="andro_header_update">به‌روزرسانی</string>
+    <string name="subscription_expired_header">اشتراک پایان یافته</string>
+    <string name="legacy_mtu_parallel_hint">تست‌های موازی بیشتر می‌توانند اتصال اول را سریع‌تر کنند، اما ممکن است فشار بیشتری به گوشی وارد کنند.</string>
+    <string name="config_converter">آزمایشگاه پروتکل</string>
+    <string name="converter_description">در این آزمایشگاه پروتکل‌ها یکی‌یکی روی اینترنت تو تست می‌شوند. یک پروتکل موفق و کانفیگ یا اشتراک دلخواهت را انتخاب کن تا اشتراک my star ساخته شود.</string>
+    <string name="converter_start">شروع تست</string>
+    <string name="converter_duration">بررسی کامل ممکن است چند دقیقه طول بکشد.</string>
+    <string name="converter_progress">تست %1$d از %2$d</string>
+    <string name="converter_progress_summary">%1$d از %2$d پروتکل پاسخ دادند</string>
+    <string name="converter_score_explanation">امتیاز نسبت به سریع‌ترین پاسخ همین نوبت محاسبه می‌شود. سریع‌ترین پاسخ ۱۰۰٪ می‌گیرد.</string>
+    <string name="converter_score">%1$d٪</string>
+    <string name="converter_testing">در حال تست اتصال…</string>
+    <string name="converter_results">پروتکل‌های فعال</string>
+    <string name="converter_no_results">در این نوبت هیچ پروتکلی پاسخ موفق نداد.</string>
+    <string name="converter_choose_source">انتخاب منبع برای my star</string>
+    <string name="converter_no_sources">در این بخش منبعی موجود نیست.</string>
+    <string name="dns_connect_link_types">لینک کانفیگ Soar، Master یا Cotton را وارد کنید.</string>
+    <string name="converter_profile">کانفیگ</string>
+    <string name="converter_subscription">اشتراک</string>
+    <string name="converter_passed">وصل شد</string>
+    <string name="converter_failed">در دسترس نبود</string>
+    <string name="converter_queued">در انتظار تست</string>
+</resources>

@@ -864,4 +864,9 @@
     <string name="aether_wait_cosmos_32">🚀 We are at the controls until the route is ready.</string>
     <string name="aether_action_rebuild_profile">準備並自動連線</string>
     <string name="aether_scan_network">掃描模式</string>
+    <string name="usage_earlier">較早</string>
+    <string name="usage_later">較晚</string>
+    <string name="aether_build_configs">建立測試設定</string>
+    <string name="aether_build_choose_out_rule">選擇 OutRule 設定</string>
+    <string name="aether_build_no_out_rules">請先匯入支援的出口設定。</string>
 </resources>

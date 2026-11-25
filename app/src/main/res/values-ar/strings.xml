@@ -874,4 +874,9 @@
     <string name="aether_wait_cosmos_32">🚀 We are at the controls until the route is ready.</string>
     <string name="aether_action_rebuild_profile">الإعداد والاتصال تلقائيًا</string>
     <string name="aether_scan_network">وضع المسح</string>
+    <string name="usage_earlier">أقدم</string>
+    <string name="usage_later">أحدث</string>
+    <string name="aether_build_configs">إنشاء إعدادات تجريبية</string>
+    <string name="aether_build_choose_out_rule">اختر إعداد OutRule</string>
+    <string name="aether_build_no_out_rules">استورد إعداد خروج مدعوم أولاً.</string>
 </resources>

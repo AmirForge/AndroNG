@@ -864,4 +864,9 @@
     <string name="aether_wait_cosmos_32">🚀 We are at the controls until the route is ready.</string>
     <string name="aether_action_rebuild_profile">Chuẩn bị và tự động kết nối</string>
     <string name="aether_scan_network">Chế độ quét</string>
+    <string name="usage_earlier">Sớm hơn</string>
+    <string name="usage_later">Muộn hơn</string>
+    <string name="aether_build_configs">Tạo cấu hình thử nghiệm</string>
+    <string name="aether_build_choose_out_rule">Chọn cấu hình OutRule</string>
+    <string name="aether_build_no_out_rules">Hãy nhập cấu hình đầu ra được hỗ trợ trước.</string>
 </resources>

@@ -31,8 +31,8 @@ android {
         applicationId = "com.v2meda.android"
         minSdk = 28
         targetSdk = 36
-        versionCode = 775
-        versionName = "1.5.0"
+        versionCode = 778
+        versionName = "1.6.0"
 
         buildConfigField("String", "DISTRIBUTION", "\"v2meda\"")
         buildConfigField("String", "CONTROL_PANEL_URL", "\"$controlPanelUrl\"")
@@ -59,6 +59,7 @@ android {
 
     buildTypes {
         getByName("debug") {
+            applicationIdSuffix = ".debug"
             signingConfig = signingConfigs.getByName("debug")
         }
         release {

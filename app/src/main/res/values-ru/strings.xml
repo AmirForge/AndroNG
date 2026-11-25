@@ -870,4 +870,9 @@
     <string name="aether_wait_cosmos_32">🚀 We are at the controls until the route is ready.</string>
     <string name="aether_action_rebuild_profile">Подготовить и подключить автоматически</string>
     <string name="aether_scan_network">Режим сканирования</string>
+    <string name="usage_earlier">Раньше</string>
+    <string name="usage_later">Позже</string>
+    <string name="aether_build_configs">Создать тестовые конфигурации</string>
+    <string name="aether_build_choose_out_rule">Выберите конфигурацию OutRule</string>
+    <string name="aether_build_no_out_rules">Сначала импортируйте поддерживаемую исходящую конфигурацию.</string>
 </resources>

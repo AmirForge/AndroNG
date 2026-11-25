@@ -866,4 +866,9 @@
     <string name="aether_wait_cosmos_32">🚀 تا آماده شدن مسیر، ما پشت فرمونیم.</string>
     <string name="aether_action_rebuild_profile">آماده‌سازی و اتصال خودکار</string>
     <string name="aether_scan_network">حالت اسکن</string>
+    <string name="usage_earlier">قدیمی‌تر</string>
+    <string name="usage_later">نوتر</string>
+    <string name="aether_build_configs">بیلد کانفیگ</string>
+    <string name="aether_build_choose_out_rule">کانفیگ OutRule را انتخاب کن</string>
+    <string name="aether_build_no_out_rules">اول یک کانفیگ خروجی وارد کن.</string>
 </resources>

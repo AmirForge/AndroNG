@@ -1,6 +1,6 @@
 package com.v2ray.ang.core
 
-import com.v2ray.ang.core.AetherDelayTester.Route
+import com.google.gson.JsonParser
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.AetherProtocol
 import com.v2ray.ang.enums.EConfigType
@@ -80,118 +80,38 @@ class AetherDelayTesterTest {
     private fun aether(protocol: AetherProtocol) =
         ProfileItem.create(EConfigType.AETHER).apply { aetherProtocol = protocol.type }
 
-    /** The live session, running [running] on its own unless [exit] says what its core dials out through. */
-    private fun session(
-        running: ProfileItem? = null,
-        listening: Boolean = true,
-        port: Int = AetherCoreManager.socksPort,
-        exit: String? = running?.let { AetherExit.of(it).key },
-    ) = AetherDelayTester.LiveSession(running?.let { AetherCoreManager.buildArguments(it, port) }, port, listening, exit)
-
     @Test
-    fun aListenerOnTheAetherPortIsNoSessionWhereTheProcessesTellNone() {
-        // The core of another test listens on the one Aether port; the selected Aether profile does not run.
-        val selected = aether(AetherProtocol.WIREGUARD)
-        val session = AetherDelayTester.liveSessionOf(process = null, processesListed = true, active = { selected }, answers = { true })
-        assertEquals(null, session)
-        assertEquals(Route.NEW_TUNNEL, AetherDelayTester.route("a", AetherCore.of(aether(AetherProtocol.MASQUE)), "b", session))
+    fun testListenerUsesAnAvailableLoopbackPortAwayFromTheSession() {
+        val loopback = InetAddress.getByName("127.0.0.1")
+        ServerSocket(0, 1, loopback).use { session ->
+            val firstPort = AetherDelayTester.allocateTestPort(session.localPort)
+            assertTrue(firstPort != session.localPort)
+            ServerSocket(firstPort, 1, loopback).use {
+                val secondPort = AetherDelayTester.allocateTestPort(session.localPort)
+                assertTrue(secondPort != firstPort)
+                assertTrue(secondPort != session.localPort)
+            }
+        }
     }
 
     @Test
-    fun withoutTheProcessesAListenerOnTheSelectedProfilesPortStandsInForTheSession() {
-        val selected = aether(AetherProtocol.WIREGUARD)
-        val port = AetherCore.of(selected).port
-        val session = AetherDelayTester.liveSessionOf(process = null, processesListed = false, active = { selected }, answers = { it == port })!!
-        assertEquals(null, session.arguments)
-        assertEquals(port, session.port)
-        assertTrue(session.listening)
+    fun chainedTestMovesOnlyTheOutboundsThatDialItsAetherListener() {
+        val config = JsonParser.parseString(
+            """
+            {"outbounds":[
+                {"tag":"aether","protocol":"socks","settings":{"address":"127.0.0.1","port":10808}},
+                {"tag":"aether-fallback","protocol":"socks","settings":{"address":"127.0.0.1","port":10808}},
+                {"tag":"another-local","protocol":"socks","settings":{"address":"127.0.0.1","port":10809}},
+                {"tag":"remote","protocol":"socks","settings":{"address":"example.com","port":10808}},
+                {"tag":"http","protocol":"http","settings":{"address":"127.0.0.1","port":10808}}
+            ]}
+            """.trimIndent()
+        ).asJsonObject
 
-        assertEquals(null, AetherDelayTester.liveSessionOf(null, processesListed = false, active = { selected }, answers = { false }))
-        val vless = ProfileItem.create(EConfigType.VLESS)
-        assertEquals(null, AetherDelayTester.liveSessionOf(null, processesListed = false, active = { vless }, answers = { true }))
-        assertEquals(null, AetherDelayTester.liveSessionOf(null, processesListed = false, active = { null }, answers = { true }))
-    }
-
-    @Test
-    fun theSessionIsReadFromItsCoreProcess() {
-        val argv = listOf("/data/app/lib/libaether.so", "--bind", "127.0.0.1:20808", "--protocol", "wg")
-        val process = AetherCoreManager.CoreProcess(pid = 4242, argv = argv, ownerAlive = true, sessionMarked = true, exit = "key")
-        var asked: Int? = null
-        val session = AetherDelayTester.liveSessionOf(process, processesListed = true, active = { error("not asked") }) { port ->
-            asked = port
-            false
-        }!!
-        assertEquals(argv.drop(1), session.arguments)
-        assertEquals(20808, session.port)
-        assertEquals(20808, asked)
-        assertFalse(session.listening)
-        assertEquals("key", session.exit)
-    }
-
-    @Test
-    fun withoutAnAetherSessionEachTestGetsItsOwnTunnel() {
-        val masque = aether(AetherProtocol.MASQUE)
-        assertEquals(Route.NEW_TUNNEL, AetherDelayTester.route("a", AetherCore.of(masque), "a", session = null))
-        assertEquals(Route.NEW_TUNNEL, AetherDelayTester.route("a", AetherCore.of(masque), null, session = null))
-    }
-
-    @Test
-    fun theRunningProfileIsMeasuredThroughTheLiveSession() {
-        val wireguard = aether(AetherProtocol.WIREGUARD).apply { server = "162.159.192.1"; serverPort = "2408" }
-        // Told by the session's arguments, whichever profile is selected.
-        assertEquals(Route.ACTIVE_SESSION, AetherDelayTester.route("a", AetherCore.of(wireguard), "b", session(wireguard)))
-        // Without the process, the selected profile stands in for the running one.
-        assertEquals(Route.ACTIVE_SESSION, AetherDelayTester.route("a", AetherCore.of(wireguard), "a", session()))
-        assertEquals(Route.SKIP, AetherDelayTester.route("a", AetherCore.of(wireguard), "b", session()))
-        // The same tunnel on another port, as once the Aether listen port is changed under a running session, is not
-        // where the configuration of the test dials, nor can a test core take the port the session holds.
-        assertEquals(Route.SKIP, AetherDelayTester.route("a", AetherCore.of(wireguard), "b", session(wireguard, port = 20808)))
-    }
-
-    @Test
-    fun theRunningProfileIsLeftUntestedWhileItsSessionIsStillConnecting() {
-        val wireguard = aether(AetherProtocol.WIREGUARD).apply { server = "162.159.192.1"; serverPort = "2408" }
-        val connecting = session(wireguard, listening = false)
-        // A request through a listener that is not up yet would fail, and that is not a failure of the profile.
-        assertEquals(Route.NOT_READY, AetherDelayTester.route("a", AetherCore.of(wireguard), "a", connecting))
-        // The other routes do not depend on the listener.
-        assertEquals(Route.SKIP, AetherDelayTester.route("b", AetherCore.of(aether(AetherProtocol.GOOL)), "a", connecting))
-        assertEquals(Route.SKIP, AetherDelayTester.route("b", AetherCore.of(aether(AetherProtocol.MASQUE)), "a", connecting))
-    }
-
-    @Test
-    fun theSessionMeasuresOnlyACoreThatDialsOutThroughTheSameExitNode() {
-        val wireguard = aether(AetherProtocol.WIREGUARD).apply { server = "162.159.192.1"; serverPort = "2408" }
-        val hop = ProfileItem.create(EConfigType.VLESS).apply { remarks = "hop"; server = "1.2.3.4"; serverPort = "443" }
-        val alone = AetherCore.of(wireguard)
-        val chained = alone.copy(exit = AetherExit.through(listOf(hop)))
-        // The session runs the profile on its own: the profile is measured through it, a chain that dials out
-        // through a hop is not, though it runs the same tunnel on the same port.
-        val plainSession = session(wireguard)
-        assertEquals(Route.ACTIVE_SESSION, AetherDelayTester.route("a", alone, "b", plainSession))
-        assertEquals(Route.SKIP, AetherDelayTester.route("c", chained, "b", plainSession))
-        // And the other way round.
-        val chainSession = session(wireguard, exit = chained.exit.key)
-        assertEquals(Route.ACTIVE_SESSION, AetherDelayTester.route("c", chained, "b", chainSession))
-        assertEquals(Route.SKIP, AetherDelayTester.route("a", alone, "b", chainSession))
-        // Without the key, only the selected profile stands for what the session runs.
-        assertEquals(Route.ACTIVE_SESSION, AetherDelayTester.route("c", chained, "c", session(wireguard, exit = null)))
-        assertEquals(Route.SKIP, AetherDelayTester.route("c", chained, "b", session(wireguard, exit = null)))
-    }
-
-    @Test
-    fun everyOtherCoreIsLeftUntestedBesideTheLiveSession() {
-        // The session's core holds the one port every core listens on, whichever key either of them uses.
-        val running = aether(AetherProtocol.MASQUE).apply { server = "162.159.198.1"; serverPort = "443" }
-        val live = session(running)
-        assertEquals(Route.SKIP, AetherDelayTester.route("b", AetherCore.of(aether(AetherProtocol.MASQUE)), "a", live))
-        assertEquals(Route.SKIP, AetherDelayTester.route("b", AetherCore.of(aether(AetherProtocol.WIREGUARD)), "a", live))
-        assertEquals(Route.SKIP, AetherDelayTester.route("b", AetherCore.of(aether(AetherProtocol.GOOL)), "a", live))
-        assertEquals(Route.SKIP, AetherDelayTester.route("b", AetherCore.of(aether(AetherProtocol.MIM)), "a", live))
-        // Selected, but not what the session runs: it is not measured through that session.
-        assertEquals(Route.SKIP, AetherDelayTester.route("b", AetherCore.of(aether(AetherProtocol.MASQUE)), "b", live))
-        // Without the session's process, every profile but the selected one.
-        assertEquals(Route.SKIP, AetherDelayTester.route("b", AetherCore.of(aether(AetherProtocol.WIREGUARD)), "a", session()))
+        assertTrue(AetherDependency.moveSocksOutbounds(config, fromPort = 10808, toPort = 49000))
+        val ports = config.getAsJsonArray("outbounds").map { it.asJsonObject.getAsJsonObject("settings").get("port").asInt }
+        assertEquals(listOf(49000, 49000, 10809, 10808, 10808), ports)
+        assertFalse(AetherDependency.moveSocksOutbounds(config, fromPort = 10808, toPort = 49001))
     }
 
     @Test

@@ -867,4 +867,9 @@
     <string name="aether_wait_cosmos_32">🚀 We are at the controls until the route is ready.</string>
     <string name="aether_action_rebuild_profile">Hazırla və avtomatik qoşul</string>
     <string name="aether_scan_network">Skan rejimi</string>
+    <string name="usage_earlier">Əvvəlki</string>
+    <string name="usage_later">Sonrakı</string>
+    <string name="aether_build_configs">Sınaq konfiqurasiyaları</string>
+    <string name="aether_build_choose_out_rule">OutRule konfiqurasiyası seçin</string>
+    <string name="aether_build_no_out_rules">Əvvəlcə dəstəklənən çıxış konfiqurasiyası əlavə edin.</string>
 </resources>

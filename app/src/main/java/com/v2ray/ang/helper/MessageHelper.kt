@@ -15,6 +15,30 @@ import com.v2ray.ang.util.LogUtil
 import java.io.Serializable
 
 object MessageHelper {
+    const val SOAR_COMMAND = "com.v2ray.ang.SOAR_COMMAND"
+    const val SOAR_STATE = "com.v2ray.ang.SOAR_STATE"
+
+    fun startSoar(context: Context) {
+        ContextCompat.startForegroundService(context,
+            Intent(context, com.v2ray.ang.service.SoarVpnService::class.java).setAction("connect"))
+    }
+
+    fun sendSoarCommand(context: Context, command: String) {
+        if (command == "stop") {
+            // An explicit queued command also reaches a daemon whose onCreate has not yet
+            // registered its query receiver, so a stop during cold start cannot be lost.
+            ContextCompat.startForegroundService(context,
+                Intent(context, com.v2ray.ang.service.SoarVpnService::class.java).setAction("stop"))
+            return
+        }
+        context.sendBroadcast(Intent(SOAR_COMMAND).setPackage(AppConfig.ANG_PACKAGE).putExtra("command", command))
+    }
+
+    fun sendSoarState(context: Context, phase: String, resolver: String = "", attempt: Int = 0, total: Int = 0) {
+        context.sendBroadcast(Intent(SOAR_STATE).setPackage(AppConfig.ANG_PACKAGE)
+            .putExtra("phase", phase).putExtra("resolver", resolver)
+            .putExtra("attempt", attempt).putExtra("total", total))
+    }
     const val EXTRA_REQUEST_ID = "requestId"
 
     /**

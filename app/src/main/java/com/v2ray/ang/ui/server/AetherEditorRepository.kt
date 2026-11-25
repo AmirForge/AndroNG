@@ -16,6 +16,7 @@ import com.v2ray.ang.enums.AetherProtocol
 import com.v2ray.ang.fmt.AetherFmt
 import com.v2ray.ang.handler.SettingsManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** The daemon's live Aether session; [protocol] is null when only its listener could be seen. */
@@ -41,6 +42,14 @@ interface AetherEditorSource {
     suspend fun scan(profile: ProfileItem, onOutput: (String) -> Unit): AetherScanResult?
     suspend fun scanMany(profile: ProfileItem, onOutput: (String) -> Unit, onCandidates: (List<String>) -> Unit): AetherScanResult? =
         scan(profile, onOutput)
+    suspend fun scanForConverter(profile: ProfileItem): AetherScanResult? = scan(profile) {}
+    suspend fun scanReferences(profiles: List<ProfileItem>, onResult: suspend (Int, AetherScanResult?) -> Unit) {
+        kotlinx.coroutines.coroutineScope {
+            profiles.forEachIndexed { index, profile ->
+                launch { onResult(index, kotlinx.coroutines.withTimeoutOrNull(10_000L) { scanMany(profile, {}, {}) }) }
+            }
+        }
+    }
     suspend fun identityStatus(protocol: AetherProtocol): AetherIdentityStatus
 
     /** Which of [files], key files of the identity folder, are not there or not readable as keys. */
@@ -83,6 +92,12 @@ class AetherEditorRepository(private val context: Context) : AetherEditorSource 
 
     override suspend fun scanMany(profile: ProfileItem, onOutput: (String) -> Unit, onCandidates: (List<String>) -> Unit): AetherScanResult? =
         AetherScanner.scan(context, profile, onOutput, onCandidates)
+
+    override suspend fun scanForConverter(profile: ProfileItem): AetherScanResult? =
+        AetherScanner.scan(context, profile, timeoutMs = 35_000L)
+
+    override suspend fun scanReferences(profiles: List<ProfileItem>, onResult: suspend (Int, AetherScanResult?) -> Unit) =
+        AetherScanner.scanReferences(context, profiles, onResult)
 
     override suspend fun identityStatus(protocol: AetherProtocol): AetherIdentityStatus =
         AetherIdentityManager.status(context, protocol)

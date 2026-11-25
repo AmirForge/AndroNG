@@ -11,6 +11,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.AtomicFile
 import com.v2ray.ang.BuildConfig
+import com.v2ray.ang.core.AetherCoreManager
+import com.v2ray.ang.core.AetherExit
+import com.v2ray.ang.core.CoreOutboundBuilder
+import com.v2ray.ang.fmt.VlessFmt
 import com.v2ray.ang.util.Utils
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -22,19 +26,32 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.net.InetSocketAddress
+import java.net.Proxy
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 data class ControlPanelContent(
     val banner: ControlPanelBanner? = null,
     val update: ControlPanelUpdate? = null,
+    val tutorialsUrl: String? = null,
 )
 
 data class ControlPanelBanner(val title: String, val text: String, val url: String?, val image: Bitmap)
 
 data class ControlPanelUpdate(val versionCode: Int, val title: String, val text: String, val url: String)
 
-internal class ControlPanelRepository(context: Context) {
+data class SubscriptionUsageReport(
+    val startDate: String,
+    val hourStart: Long,
+    val collectedAt: Long,
+    val usedBytes: Long,
+    val remainingBytes: Long?,
+    val daily: List<Long?>,
+    val hourly: List<Long?>,
+)
+
+internal class ControlPanelRepository(private val context: Context) {
     private val origin = BuildConfig.CONTROL_PANEL_URL.toHttpUrlOrNull()
     private val registration by lazy { AtomicFile(File(context.noBackupFilesDir, "control-panel-install")) }
 
@@ -50,11 +67,21 @@ internal class ControlPanelRepository(context: Context) {
         }
         val id = stored.firstOrNull()?.let { runCatching { UUID.fromString(it).toString() }.getOrNull() }
             ?: UUID.randomUUID().toString().also { writeRegistration(it, null) }
-        if (stored.getOrNull(1) == server.toString()) return@synchronized
+        val androidId = android.provider.Settings.Secure.getString(context.contentResolver, android.provider.Settings.Secure.ANDROID_ID)
+        val stableId = androidId?.takeIf(String::isNotBlank)?.let {
+            val hash = java.security.MessageDigest.getInstance("SHA-256")
+                .digest("androng-install-v2:$it".toByteArray())
+            hash[6] = ((hash[6].toInt() and 0x0f) or 0x40).toByte()
+            hash[8] = ((hash[8].toInt() and 0x3f) or 0x80).toByte()
+            val buffer = java.nio.ByteBuffer.wrap(hash)
+            UUID(buffer.long, buffer.long).toString()
+        } ?: id
+        val marker = "$server|$stableId"
+        if (stored.getOrNull(1) == marker) return@synchronized
 
-        val body = JSONObject().put("id", id).toString().toRequestBody(jsonType)
+        val body = JSONObject().put("id", stableId).toString().toRequestBody(jsonType)
         client.newCall(Request.Builder().url(url).post(body).build()).execute().use { response ->
-            if (response.code == 204) writeRegistration(id, server.toString())
+            if (response.code == 204) writeRegistration(id, marker)
         }
     }
 
@@ -66,20 +93,63 @@ internal class ControlPanelRepository(context: Context) {
             ?: UUID.randomUUID().toString().also { writeRegistration(it, null) }
     }
 
-    suspend fun loadPro(code: String? = null, token: String? = null): ProPayload {
+    suspend fun loadPro(code: String? = null, token: String? = null): ProPayload =
+        loadProWithClient(code, token, proClient)
+
+    suspend fun loadFreeDns(): List<String> {
+        val server = origin ?: throw IOException("Control panel unavailable")
+        val url = server.resolve("/api/content") ?: throw IOException("Control panel unavailable")
+        val (status, body) = requestPayload(Request.Builder().url(url).build(), 1_600_000)
+        if (status != 200) throw IOException("DNS configuration unavailable")
+        return JSONObject(body).optStringOrNull("dnsFreeConfig").orEmpty().lineSequence()
+            .map(String::trim).filter(String::isNotEmpty).distinct().take(64).toList()
+    }
+
+    suspend fun loadSubscriptionStatus(token: String): com.v2ray.ang.dto.entities.SubscriptionUsageInfo? {
+        val url = origin?.resolve("/api/pro/status") ?: return null
+        val body = JSONObject().put("id", installationID()).put("token", token)
+        val (status, payload) = requestPayload(Request.Builder().url(url)
+            .post(body.toString().toRequestBody(jsonType)).build(), 8192, proClient)
+        if (status != 200) return null
+        val data = JSONObject(payload)
+        if (data.optBoolean("expired")) return com.v2ray.ang.dto.entities.SubscriptionUsageInfo(expire = 1L)
+        return SubscriptionInfoParser.parse(data.optStringOrNull("usage"), null, null, null)
+    }
+
+    private suspend fun loadProWithClient(code: String?, token: String?, requestClient: OkHttpClient): ProPayload {
         val server = origin ?: throw IOException("Control panel unavailable")
         val body = JSONObject().put("id", installationID())
         if (code != null) body.put("code", code) else body.put("token", token)
         val url = server.resolve(if (code != null) "/api/pro/redeem" else "/api/pro/content")!!
         val request = Request.Builder().url(url).post(body.toString().toRequestBody(jsonType)).build()
-        val response = requestPayload(request, 600_000, proClient)
-        val data = JSONObject(response.second)
+        val response = requestPayload(request, 600_000, requestClient)
+        val data = runCatching { JSONObject(response.second) }.getOrElse { throw IOException("Invalid panel response") }
         if (response.first !in 200..299) throw ProRequestException(data.optString("error"), data.optLong("retryAfter"))
         val content = data.optString("content").takeIf { it.isNotBlank() && it.length <= MAX_FREE_CONTENT }
             ?: throw IOException("Subscription unavailable")
         val credential = data.optString("token").takeIf { it.isNotBlank() && it.length <= 512 }
             ?: throw IOException("Subscription unavailable")
         return ProPayload(content, credential, data.optLong("retryAfter"))
+    }
+
+    suspend fun loadUsage(token: String): SubscriptionUsageReport {
+        val url = origin?.resolve("/api/pro/usage") ?: throw IOException("Control panel unavailable")
+        val body = JSONObject().put("id", installationID()).put("token", token)
+        val request = Request.Builder().url(url).post(body.toString().toRequestBody(jsonType)).build()
+        val (status, response) = requestPayload(request, 8192, proClient)
+        if (status !in 200..299) throw IOException("Usage unavailable")
+        val report = JSONObject(response)
+        fun bars(key: String, count: Int): List<Long?> {
+            val values = report.getJSONArray(key)
+            if (values.length() != count) throw IOException("Invalid usage report")
+            return List(count) { i -> if (values.isNull(i)) null else values.getLong(i).takeIf { it >= 0 } }
+        }
+        return SubscriptionUsageReport(
+            report.getString("startDate"), report.getLong("hourStart"), report.getLong("collectedAt"),
+            report.getLong("usedBytes"),
+            if (report.isNull("remainingBytes")) null else report.getLong("remainingBytes"),
+            bars("daily", 30), bars("hourly", 24),
+        )
     }
 
     internal suspend fun requestPayload(request: Request, limit: Long, requestClient: OkHttpClient = client): Pair<Int, String> = suspendCancellableCoroutine { continuation ->
@@ -130,7 +200,7 @@ internal class ControlPanelRepository(context: Context) {
                 ControlPanelUpdate(versionCode, data.optString("title"), data.optString("text"), link)
             } else null
         }
-        return ControlPanelContent(banner, update)
+        return ControlPanelContent(banner, update, safeLink(payload.optStringOrNull("tutorialsUrl")))
     }
 
     suspend fun loadFreeConfigurationCancellable(): String? {

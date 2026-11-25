@@ -108,7 +108,18 @@ internal fun ProCodeDialog(state: MainUiState, onAction: (MainAction) -> Unit) {
                 else state.proError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
             }
         },
-        confirmButton = { TextButton(onClick = submit, enabled = canSubmit) { Text(stringResource(R.string.pro_activate)) } },
-        dismissButton = { TextButton(onClick = { onAction(MainAction.DismissProSubscription) }, enabled = !state.proBusy) { Text(stringResource(android.R.string.cancel)) } },
+        confirmButton = {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                androidx.compose.foundation.layout.Row(
+                    Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End,
+                ) {
+                    TextButton(onClick = { onAction(MainAction.DismissProSubscription) }, enabled = !state.proBusy) {
+                        Text(stringResource(android.R.string.cancel))
+                    }
+                    TextButton(onClick = submit, enabled = canSubmit) { Text(stringResource(R.string.pro_activate)) }
+                }
+
+            }
+        },
     )
 }

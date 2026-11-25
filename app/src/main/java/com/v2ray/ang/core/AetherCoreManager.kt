@@ -910,6 +910,21 @@ object AetherCoreManager {
     /** One probe operation at a time; competing endpoints share its exit, see [withProcess]. */
     private val exitTurns = Mutex()
 
+    /** The task process owns one Xray instance, shared by all local test listeners. */
+    internal suspend fun <T> withLocalTestBatch(block: suspend () -> T): T = exitTurns.withLock { block() }
+
+    internal suspend fun <T> withLocalTestProcess(
+        context: Context, core: AetherCore, exitPort: Int, probePort: Int,
+        block: suspend (ReceiveChannel<String>) -> T?,
+    ): T? = coroutineScope {
+        val commands = core.alternatives.map { standaloneArguments(it, exitPort) }.distinct()
+        if (commands.size > 1) {
+            runProbeRace(context, core.arguments, commands, "local-test-$probePort", {}, null, block)
+        } else {
+            runCore(context, standaloneArguments(core.arguments, exitPort), "local-test-$probePort", {}, null, block)
+        }
+    }
+
     /**
      * [run] with the port of the exit that [open] opens, null when it does not open, in which case
      * nothing runs. The exit is taken in turns by [turns], and [close] closes it once [run] is over,

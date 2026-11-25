@@ -11,6 +11,8 @@ import com.v2ray.ang.enums.AetherScanNetwork
 import com.v2ray.ang.enums.AetherTransport
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
@@ -30,7 +32,8 @@ data class AetherScanResult(
 
 object AetherScanner {
 
-    private const val SCAN_TIMEOUT_MS = 8 * 60_000L
+    internal const val SCAN_TIMEOUT_MS = 15_000L
+    private const val DIAGNOSTIC_SCAN_TIMEOUT_MS = 25_000L
 
     private val masqueGateway = Regex("""selected MASQUE gateway (\S+)""")
     private val wireguardEndpoint = Regex("""selected WireGuard endpoint (\S+)""")
@@ -40,15 +43,22 @@ object AetherScanner {
     private val exitAccepted = Regex("""exit location \S+ accepted""")
     private val exitRejected = Regex("""exit location \S+ rejected""")
 
-    internal suspend fun prepareNetwork(context: Context): Boolean = withContext(Dispatchers.IO) {
+    internal suspend fun prepareNetwork(
+        context: Context,
+        allowVpnDisconnect: Boolean = true,
+        ownServiceRunning: Boolean = false,
+    ): Boolean = withContext(Dispatchers.IO) {
         val connectivity = context.getSystemService(ConnectivityManager::class.java) ?: return@withContext true
         fun usesVpn(): Boolean = connectivity.activeNetwork?.let(connectivity::getNetworkCapabilities)
             ?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
 
-        if (!usesVpn()) return@withContext true
-        if (VpnService.prepare(context) != null) return@withContext false
+        val vpnOnDefaultNetwork = usesVpn()
+        if (!vpnOnDefaultNetwork && !ownServiceRunning) return@withContext true
+        if (!allowVpnDisconnect) return@withContext false
+        if (vpnOnDefaultNetwork && VpnService.prepare(context) != null) return@withContext false
 
         LauncherManager.stopService(context)
+        if (vpnOnDefaultNetwork) com.v2ray.ang.helper.MessageHelper.sendSoarCommand(context, "stop")
         withTimeoutOrNull(5_000L) {
             while (usesVpn()) delay(150)
             true
@@ -60,11 +70,62 @@ object AetherScanner {
         profile: ProfileItem,
         onOutput: (String) -> Unit = {},
         onCandidates: (List<String>) -> Unit = {},
+        timeoutMs: Long = SCAN_TIMEOUT_MS,
     ): AetherScanResult? {
-        return AetherCoreManager.withProbeExit(context, AetherExit.of(profile), "aether-scan") { exitPort ->
-            collectTransportCandidates(profile, onOutput, onCandidates) { next, output, timeout ->
-                scanOnce(context, next, output, timeout, exitPort)
+        val partial = java.util.concurrent.atomic.AtomicReference<List<String>>(emptyList())
+        return withTimeoutOrNull(timeoutMs) {
+            AetherCoreManager.withProbeExit(context, AetherExit.of(profile), "aether-scan") { exitPort ->
+                collectTransportCandidates(profile, onOutput, { candidates ->
+                    partial.set(candidates.toList())
+                    onCandidates(candidates)
+                }, timeoutMs) { next, output, timeout ->
+                    scanOnce(context, next, output, timeout, exitPort)
+                }
             }
+        } ?: partial.get().firstOrNull()?.let(::decode)?.copy(candidates = partial.get())
+    }
+
+    /** Reference templates all use one direct exit. Holding it once lets the native scans overlap. */
+    internal suspend fun scanReferences(
+        context: Context,
+        profiles: List<ProfileItem>,
+        onResult: suspend (Int, AetherScanResult?) -> Unit,
+    ) {
+        if (profiles.isEmpty()) return
+        coroutineScope {
+            val results = kotlinx.coroutines.channels.Channel<Pair<Int, AetherScanResult?>>(profiles.size)
+            val reported = mutableSetOf<Int>()
+            val partial = profiles.map { java.util.concurrent.atomic.AtomicReference<List<String>>(emptyList()) }
+            launch {
+                try {
+                    val diagnostic = profiles.all {
+                        it.subscriptionId == com.v2ray.ang.ui.main.AETHER_DIAGNOSTIC_GROUP
+                    }
+                    val budget = if (diagnostic) DIAGNOSTIC_SCAN_TIMEOUT_MS else 10_000L
+                    withTimeoutOrNull(budget) {
+                        AetherCoreManager.withProbeExit(context, AetherExit.of(profiles.first()), "aether-reference-scan") { port ->
+                            coroutineScope {
+                                profiles.mapIndexed { index, profile -> async {
+                                    val result = collectTransportCandidates(profile, {}, { partial[index].set(it.toList()) }, budget) { next, output, timeout ->
+                                        scanOnce(context, next, output, timeout, port)
+                                    }
+                                    synchronized(reported) {
+                                        results.trySend(index to result)
+                                        reported.add(index)
+                                    }
+                                } }.awaitAll()
+                            }
+                        }
+                    }
+                    profiles.indices.filterNot { it in reported }.forEach { index ->
+                        val candidates = partial[index].get()
+                        results.send(index to candidates.firstOrNull()?.let(::decode)?.copy(candidates = candidates))
+                    }
+                } finally {
+                    results.close()
+                }
+            }
+            for ((index, result) in results) onResult(index, result)
         }
     }
 
@@ -84,6 +145,7 @@ object AetherScanner {
         profile: ProfileItem,
         onOutput: (String) -> Unit,
         onCandidates: (List<String>) -> Unit,
+        timeoutMs: Long = SCAN_TIMEOUT_MS,
         scan: suspend (ProfileItem, (String) -> Unit, Long) -> AetherScanResult?,
     ): AetherScanResult? = coroutineScope {
         val count = endpointCount(profile)
@@ -97,17 +159,15 @@ object AetherScanner {
         fun collect(result: AetherScanResult, transport: AetherTransport) = synchronized(lock) {
             val tagged = encode(result.copy(candidates = emptyList(), transport = transport.takeIf { overMasque }))
             if (found.size < count && found.add(tagged)) {
-                if (found.size % 10 == 0 || found.size == count) {
-                    onCandidates(found.toList())
-                    published = found.size
-                }
+                onCandidates(found.toList())
+                published = found.size
                 if (found.size == count) done.complete(decode(found.first())!!.copy(candidates = found.toList()))
             }
         }
         val jobs = transports.map { transport -> launch {
             try {
                 val next = profile.copy(aetherTransport = transport.type, aetherEndpointCount = count)
-                val result = collectCandidates(next, onOutput, {}, onCandidate = { collect(it, transport) }) { output, timeout ->
+                val result = collectCandidates(next, onOutput, {}, timeoutMs, onCandidate = { collect(it, transport) }) { output, timeout ->
                     scan(next, output, timeout)
                 }
                 result?.let { value ->
@@ -121,7 +181,7 @@ object AetherScanner {
             }
         } }
         try {
-            withTimeoutOrNull(SCAN_TIMEOUT_MS) { done.await() }
+            withTimeoutOrNull(timeoutMs) { done.await() }
         } finally {
             jobs.forEach { it.cancel() }
             withContext(NonCancellable) { jobs.forEach { it.cancelAndJoin() } }

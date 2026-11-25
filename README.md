@@ -42,17 +42,19 @@
 
 ### دانلود و نصب ⬇️
 
-**نسخهٔ فعلی: 1.5.0، بیلد 775 — اندروید ۹ به بالا**
+**نسخهٔ فعلی: 1.6.0، بیلد 778 — اندروید ۹ به بالا**
 
-- **[📱 ARM64 — برای بیشتر گوشی‌های جدید](https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-775/AndroNG-1.5.0-775-arm64-v8a-release.apk)**
-- **[📲 ARM32 — پردازندهٔ armeabi-v7a](https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-775/AndroNG-1.5.0-775-armeabi-v7a-release.apk)**
-- **[💻 x86 — پردازندهٔ Intel سی‌ودوبیتی](https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-775/AndroNG-1.5.0-775-x86-release.apk)**
-- **[🖥️ x86_64 — پردازندهٔ Intel شصت‌وچهاربیتی](https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-775/AndroNG-1.5.0-775-x86_64-release.apk)**
-- **[🌍 Universal — همهٔ معماری‌ها در یک فایل](https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-775/AndroNG-1.5.0-775-universal-release.apk)**
+- **[📱 ARM64 — برای بیشتر گوشی‌های جدید](https://github.com/AmirForge/AndroNG/releases/download/v1.6.0-778/AndroNG-1.6.0-778-arm64-v8a-release.apk)**
+- **[📲 ARM32 — پردازندهٔ armeabi-v7a](https://github.com/AmirForge/AndroNG/releases/download/v1.6.0-778/AndroNG-1.6.0-778-armeabi-v7a-release.apk)**
+- **[💻 x86 — پردازندهٔ Intel سی‌ودوبیتی](https://github.com/AmirForge/AndroNG/releases/download/v1.6.0-778/AndroNG-1.6.0-778-x86-release.apk)**
+- **[🖥️ x86_64 — پردازندهٔ Intel شصت‌وچهاربیتی](https://github.com/AmirForge/AndroNG/releases/download/v1.6.0-778/AndroNG-1.6.0-778-x86_64-release.apk)**
+- **[🌍 Universal — همهٔ معماری‌ها در یک فایل](https://github.com/AmirForge/AndroNG/releases/download/v1.6.0-778/AndroNG-1.6.0-778-universal-release.apk)**
 - **[صفحهٔ آخرین نسخه](https://github.com/AmirForge/AndroNG/releases/latest)**
 - **[آرشیو تمام ریلیزهای منتشرشده](https://github.com/AmirForge/AndroNG/releases)**
 
 اگر نوع پردازندهٔ گوشی‌ات را نمی‌دانی، **Universal** را بگیر؛ حجمش بیشتر است اما همهٔ معماری‌ها را همراه دارد. همهٔ فایل‌ها به اندروید ۹ یا بالاتر نیاز دارند. فایل‌های ZIP و Source code برای نصب روی گوشی نیستند؛ فایل با پسوند **.apk** را دانلود کن.
+
+[تازه‌های نسخهٔ ۱.۶.۰](docs/release-778.md)
 
 ### اولین اتصال، در سه قدم ✨
 
@@ -100,17 +102,19 @@ Import a profile, tap connect, and keep your configurations together with suppor
 
 ### Get the app ⬇️
 
-**Current release: 1.5.0, build 775 — Android 9 and newer**
+**Current release: 1.6.0, build 778 — Android 9 and newer**
 
-- **[📱 ARM64 — most modern Android phones](https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-775/AndroNG-1.5.0-775-arm64-v8a-release.apk)**
-- **[📲 ARM32 — armeabi-v7a devices](https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-775/AndroNG-1.5.0-775-armeabi-v7a-release.apk)**
-- **[💻 x86 — 32-bit Intel devices](https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-775/AndroNG-1.5.0-775-x86-release.apk)**
-- **[🖥️ x86_64 — 64-bit Intel devices](https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-775/AndroNG-1.5.0-775-x86_64-release.apk)**
-- **[🌍 Universal — all architectures in one APK](https://github.com/AmirForge/AndroNG/releases/download/v1.5.0-775/AndroNG-1.5.0-775-universal-release.apk)**
+- **[📱 ARM64 — most modern Android phones](https://github.com/AmirForge/AndroNG/releases/download/v1.6.0-778/AndroNG-1.6.0-778-arm64-v8a-release.apk)**
+- **[📲 ARM32 — armeabi-v7a devices](https://github.com/AmirForge/AndroNG/releases/download/v1.6.0-778/AndroNG-1.6.0-778-armeabi-v7a-release.apk)**
+- **[💻 x86 — 32-bit Intel devices](https://github.com/AmirForge/AndroNG/releases/download/v1.6.0-778/AndroNG-1.6.0-778-x86-release.apk)**
+- **[🖥️ x86_64 — 64-bit Intel devices](https://github.com/AmirForge/AndroNG/releases/download/v1.6.0-778/AndroNG-1.6.0-778-x86_64-release.apk)**
+- **[🌍 Universal — all architectures in one APK](https://github.com/AmirForge/AndroNG/releases/download/v1.6.0-778/AndroNG-1.6.0-778-universal-release.apk)**
 - **[Latest release](https://github.com/AmirForge/AndroNG/releases/latest)**
 - **[All published releases](https://github.com/AmirForge/AndroNG/releases)**
 
 Not sure which version fits your device? Choose **Universal**. It includes all four architectures and is a larger download. Every APK requires Android 9 or newer. Install the **.apk** file; ZIP files and source archives are for developers.
+
+[What's new in version 1.6.0](docs/release-778.md)
 
 ### Your first connection ✨
 
@@ -127,7 +131,7 @@ If an Aether profile does not respond, try refreshing its endpoints or selecting
 ---
 
 <p align="center">
-  Built on the work of <strong>2dust, patterniha &amp; CluvexStudio</strong> 💗<br>
+  Thanks to all the developers who kept building through difficult times. 🩷<br>
   Based on v2rayNG and PattNG; not an official release of either project.<br>
   <a href="LICENSE">License</a> · <a href="docs/BUILD.md">Build from source</a> · <a href="docs/native-sources.md">Native source information</a>
 </p>

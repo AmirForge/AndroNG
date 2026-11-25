@@ -1,0 +1,4 @@
+<resources>
+    <string name="aether_endpoint_updated">updated</string>
+    <string name="aether_endpoint_error">error</string>
+</resources>

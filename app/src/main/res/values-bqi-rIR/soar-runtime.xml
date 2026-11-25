@@ -1,0 +1,36 @@
+<resources>
+    <string name="soar_runtime_mtu">VPN MTU</string>
+    <string name="soar_runtime_mtu_hint">Packet size of the Android VPN interface</string>
+    <string name="soar_vpn_mtu">VPN MTU · 1280–9000</string>
+    <string name="soar_tuning">Network tuning</string>
+    <string name="soar_tuning_hint">Retries, workers, buffers and timeouts</string>
+    <string name="soar_resolver_retries">Resolver retries · 1–10</string>
+    <string name="soar_resolver_timeout">Resolver timeout (ms) · 500–30000</string>
+    <string name="soar_retry_delay">Retry interval (ms) · 0–10000</string>
+    <string name="soar_https_retries">HTTPS test attempts · 1–10</string>
+    <string name="soar_https_timeout">HTTPS timeout (ms) · 1000–30000</string>
+    <string name="soar_process_workers">Process workers · 1–16</string>
+    <string name="soar_local_connections">Local connection limit · 8–256</string>
+    <string name="soar_copy_buffer">Transfer buffer (KiB) · 4–256</string>
+    <string name="soar_tcp_timeout">TCP idle timeout (s) · 15–3600</string>
+    <string name="soar_udp_timeout">DNS association timeout (s) · 5–600</string>
+    <string name="soar_local_proxy">Local proxy</string>
+    <string name="soar_local_proxy_hint">SOCKS5, HTTP and authentication</string>
+    <string name="soar_listen_ip">Listen IP · loopback only</string>
+    <string name="soar_listen_port">SOCKS5 port · 1024–65535</string>
+    <string name="soar_http_proxy">HTTP proxy</string>
+    <string name="soar_http_port">HTTP port · 1024–65535</string>
+    <string name="soar_authentication">SOCKS5 / HTTP authentication</string>
+    <string name="soar_username">Username</string>
+    <string name="soar_password">Password</string>
+    <string name="soar_reliability">Reliability</string>
+    <string name="soar_reliability_hint">Health monitoring and connection warmup</string>
+    <string name="soar_watchdog">Health check interval (s) · 0 disables</string>
+    <string name="soar_warmup">Traffic warmup</string>
+    <string name="soar_warmup_count">Warmup requests · 1–16</string>
+    <string name="soar_log_level">Log level</string>
+    <string name="soar_other_engines">Other engine controls</string>
+    <string name="soar_other_engines_hint">Settings vary by DNS engine</string>
+    <string name="soar_other_engines_detail">Upload/download MTU ranges, MTU parallelism, LZ4 compression, packet duplication, Base Encode, RX/TX queues and balancing strategies belong to Master/Storm/Cotten. Soar manages packet sizing and route balancing internally. Its supported controls are in DNS packets, route discovery and connection capacity above.</string>
+    <string name="soar_resolver_workers">Parallel resolver tests · 1–16</string>
+</resources>
